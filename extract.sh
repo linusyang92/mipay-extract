@@ -20,7 +20,7 @@ exists() {
 
 exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
 exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
-exists 7z && sevenzip="7z" || zipalign="$tool_dir/7za"
+exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
 
 clean() {
     [ -e "$1" ] && rm -R "$1"
