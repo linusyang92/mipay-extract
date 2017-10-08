@@ -1,7 +1,7 @@
 # Mi Pay Extractor
 Extract Mi Pay from MIUI China Rom
 
-[![Build Status](https://travis-ci.org/linusyang92/mipay-extract.svg?branch=master)](https://travis-ci.org/linusyang92/mipay-extract)
+[![Build Status](https://travis-ci.org/linusyang92/mipay-extract.svg)](https://travis-ci.org/linusyang92/mipay-extract)
 
 ## Usage
 Put MIUI 9 China Rom (OTA zip package) in the directory and run `./extract.sh` to generate the flashable zip.
