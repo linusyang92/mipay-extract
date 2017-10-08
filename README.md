@@ -15,7 +15,7 @@ Only support Linux. You may need the following preliminary binaries:
 For example, you can install all dependencies using `apt-get`:
 
 ```bash
-apt-get install -y aria2 openjdk-8-jre python2.7 p7zip-full
+apt-get install -y aria2 openjdk-8-jre python2.7
 ```
 
 Automatic builds for selected devices are available in [releases](https://github.com/linusyang92/mipay-extract/releases).
