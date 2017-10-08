@@ -7,7 +7,7 @@ mipay_apps="Mipay TSMClient UPTsmService"
 base_dir=$PWD
 tool_dir=$base_dir/tools
 sdat2img="python $tool_dir/sdat2img/sdat2img.py"
-heapsize=1024
+heapsize=2048
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 libmd="libmd.txt"
@@ -60,7 +60,7 @@ deodex() {
         echo "--> already deodexed $app"
     else
         echo "--> deodexing $app..."
-        classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>&1)
+        classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
         echo "----> classes: $classes"
         echo "$classes" | while read line; do
             apkdex=$(basename $(echo "$line"))

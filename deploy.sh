@@ -10,6 +10,6 @@ declare -a urls=(
 command -v dirname >/dev/null 2>&1 && cd "$(dirname "$0")"
 for i in "${urls[@]}"
 do
-   bash extract.sh "$i" || break
+   bash extract.sh "$i" || exit 1
 done
 exit 0
