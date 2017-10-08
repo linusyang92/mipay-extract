@@ -1,0 +1,25 @@
+language: java
+jdk:
+- oraclejdk8
+branches:
+  except:
+  - master
+addons:
+  apt:
+    packages:
+    - aria2
+    - python2.7
+    - zip
+    - p7zip-full
+script:
+- bash deploy.sh
+deploy:
+  provider: releases
+  api_key: ""
+  file_glob: true
+  file: mipay-*.zip
+  overwrite: true
+  skip_cleanup: true
+  on:
+    repo: linusyang92/mipay-extract
+    tags: true
