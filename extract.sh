@@ -6,7 +6,7 @@ mipay_apps="Mipay TSMClient UPTsmService"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
-sdat2img="python $tool_dir/sdat2img/sdat2img.py"
+sdat2img="python2.7 $tool_dir/sdat2img/sdat2img.py"
 heapsize=2048
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
