@@ -9,8 +9,6 @@ addons:
     packages:
     - aria2
     - python2.7
-    - zip
-    - p7zip-full
 script:
 - bash deploy.sh
 deploy:

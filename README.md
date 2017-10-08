@@ -11,7 +11,6 @@ Only support Linux. You may need the following preliminary binaries:
 * aria2c
 * java (JDK 8)
 * python 2.7
-* p7zip
 
 For example, you can install all dependencies using `apt-get`:
 

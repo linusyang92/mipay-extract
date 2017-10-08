@@ -20,6 +20,7 @@ exists() {
 
 exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
 exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
+exists 7z && sevenzip="7z" || zipalign="$tool_dir/7za"
 
 clean() {
     [ -e "$1" ] && rm -R "$1"
@@ -54,7 +55,7 @@ deodex() {
     if [ -z "$api" ]; then
         api=25
     fi
-    file_list="$(7z l "$deoappdir/$app/$app.apk")"
+    file_list="$($sevenzip l "$deoappdir/$app/$app.apk")"
     if [[ "$file_list" == *"classes.dex"* ]]; then
         echo "--> already deodexed $app"
     else
@@ -109,7 +110,7 @@ extract() {
     pushd $dir
     trap "clean \"$PWD/system.new.dat\"" INT
     [ -f system.new.dat ] || \
-      7z x ../$file "system.new.dat" "system.transfer.list" || \
+      $sevenzip x ../$file "system.new.dat" "system.transfer.list" || \
       clean system.new.dat 
     trap "clean \"$PWD/$img\"" INT
     [ -f $img ] || \
@@ -123,14 +124,14 @@ extract() {
     mkdir -p deodex/system
 
     echo "--> copying apps"
-    7z x -odeodex/system/ "$img" build.prop >/dev/null || clean "$work_dir"
+    $sevenzip x -odeodex/system/ "$img" build.prop >/dev/null || clean "$work_dir"
     for f in $apps; do
         echo "----> copying $f..."
-        7z x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
+        $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
     done
     archs="arm64 x86_64 arm x86"
     arch="arm64"
-    frame="$(7z l "$img" framework)"
+    frame="$($sevenzip l "$img" framework)"
     for i in $archs; do
         if [[ "$frame" == *"$i"* ]]; then
             arch=$i
@@ -138,7 +139,7 @@ extract() {
             break
         fi
     done
-    7z x -odeodex/system/ "$img" framework/$arch >/dev/null || clean "$work_dir"
+    $sevenzip x -odeodex/system/ "$img" framework/$arch >/dev/null || clean "$work_dir"
     rm -f "$work_dir"/{$libmd,$libln}
     touch "$work_dir"/{$libmd,$libln}
     for f in $apps; do
@@ -155,7 +156,7 @@ extract() {
     sed -e '/#mkdir_symlink/ {' -e "r $libmd" -e 'd' -e '}' -i $ubin
     sed -e '/#do_symlink/ {' -e "r $libln" -e 'd' -e '}' -i $ubin
     rm -f ../mipay-$model-$ver.zip $libmd $libln system/build.prop
-    7z a -tzip ../../mipay-$model-$ver.zip . >/dev/null
+    $sevenzip a -tzip ../../mipay-$model-$ver.zip . >/dev/null
     trap - INT
     popd
     echo "--> done"
