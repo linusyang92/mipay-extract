@@ -10,7 +10,7 @@ addons:
     - aria2
     - python2.7
 before_script:
-- _JAVA_OPTIONS=
+- unset _JAVA_OPTIONS
 script:
 - bash deploy.sh
 deploy:
