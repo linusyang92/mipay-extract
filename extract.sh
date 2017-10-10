@@ -89,9 +89,10 @@ deodex() {
             if ! grep -q ELF $f; then
                 fname=$(basename $f)
                 echo "ln -s $(cat $f) /system/app/$app/lib/$arch/$fname" >> $libln
+                rm -f "$f"
             fi
         done
-        rm -rf "$deoappdir/$app/lib"
+        [ -z "$(ls -A $deoappdir/$app/lib)" ] && rm -rf "$deoappdir/$app/lib"
     fi
     popd
     return 0
