@@ -3,8 +3,7 @@
 declare -a urls=(
 
 # Rom URLs
-"http://bigota.d.miui.com/7.9.22/miui_MIMIX2_7.9.22_85b021fe33_7.1.zip"
-
+"http://bigota.d.miui.com/7.9.27/miui_MIMIX2_7.9.27_544b5231d0_7.1.zip"
 )
 
 command -v dirname >/dev/null 2>&1 && cd "$(dirname "$0")"
