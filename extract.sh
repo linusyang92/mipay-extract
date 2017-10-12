@@ -20,6 +20,12 @@ exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+abort() {
+    echo "--> $1"
+    echo "--> abort"
+    exit 1
+}
+
 check() {
     for b in $@; do
         exists $b || abort "Missing $b"
@@ -53,12 +59,6 @@ pushd() {
 
 popd() {
     command popd "$@" > /dev/null
-}
-
-abort() {
-    echo "--> $1"
-    echo "--> abort"
-    exit 1
 }
 
 deodex() {
