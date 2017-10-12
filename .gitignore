@@ -3,3 +3,4 @@
 *.zip
 /miui-*/
 *.pyc
+*.aria2

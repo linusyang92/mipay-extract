@@ -12,15 +12,33 @@ smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 libmd="libmd.txt"
 libln="libln.txt"
-aria2c="aria2c --file-allocation trunc -s10 -x10 -j10 -c"
+aria2c_opts="--file-allocation trunc -s10 -x10 -j10 -c"
+aria2c="aria2c $aria2c_opts"
+sed="sed"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
-exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
-exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
+check() {
+    for b in $@; do
+        exists $b || abort "Missing $b"
+    done
+}
+
+check java python2.7
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    aapt="$tool_dir/darwin/aapt"
+    zipalign="$tool_dir/darwin/zipalign"
+    sevenzip="$tool_dir/darwin/7za"
+    aria2c="$tool_dir/darwin/aria2c $aria2c_opts"
+    sed="$tool_dir/darwin/gsed"
+else
+    exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
+    exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
+    exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
+fi
 
 clean() {
     [ -e "$1" ] && rm -R "$1"
@@ -92,7 +110,7 @@ deodex() {
                 rm -f "$f"
             fi
         done
-        [ -z "$(ls -A $deoappdir/$app/lib)" ] && rm -rf "$deoappdir/$app/lib"
+        [ -z "$(ls -A $deoappdir/$app/lib/$arch)" ] && rm -rf "$deoappdir/$app/lib"
     fi
     popd
     return 0
@@ -153,10 +171,10 @@ extract() {
     ubin=META-INF/com/google/android/update-binary
     mkdir -p $(dirname $ubin)
     cp "$tool_dir/update-binary" $ubin
-    sed -i "s/ver=.*/ver=$model-$ver/" $ubin
-    sed -e '/#mkdir_symlink/ {' -e "r $libmd" -e 'd' -e '}' -i $ubin
-    sed -e '/#do_symlink/ {' -e "r $libln" -e 'd' -e '}' -i $ubin
-    rm -f ../mipay-$model-$ver.zip $libmd $libln system/build.prop
+    $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
+    $sed -e '/#mkdir_symlink/ {' -e "r $libmd" -e 'd' -e '}' -i $ubin
+    $sed -e '/#do_symlink/ {' -e "r $libln" -e 'd' -e '}' -i $ubin
+    rm -f ../../mipay-$model-$ver.zip $libmd $libln system/build.prop
     $sevenzip a -tzip ../../mipay-$model-$ver.zip . >/dev/null
     trap - INT
     popd
@@ -167,6 +185,7 @@ extract() {
 trap "echo '--> abort'; exit 1" INT
 declare -a darr=("$@")
 for i in "${darr[@]}"; do
+    [[ "$OSTYPE" == "darwin"* ]] || check aria2c
     echo "--> Downloading $(basename $i)"
     $aria2c $i || exit 1
 done
