@@ -89,10 +89,12 @@ deodex() {
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
         $sevenzip x -o$deoappdir/$app $apkfile lib >/dev/null
-        pushd $deoappdir/$app/lib
-        [ -d armeabi* ] && mv armeabi* arm
-        [ -d armv8* ] && mv armv8* arm64
-        popd
+        if [ -d $deoappdir/$app/lib ]; then
+            pushd $deoappdir/$app/lib
+            [ -d armeabi* ] && mv armeabi* arm
+            [ -d armv8* ] && mv armv8* arm64
+            popd
+        fi
     fi
     popd
     return 0
