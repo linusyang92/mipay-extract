@@ -1,0 +1,83 @@
+#!/sbin/sh
+
+ver=
+tmp=/tmp/cleaner-fix-apps
+
+if [ "$3" ]; then
+    zip=$3
+    console=/proc/$$/fd/$2
+    # write the location of the console buffer to /tmp/console for other scripts to use
+    echo "$console" > /tmp/console
+else
+    console=$(cat /tmp/console)
+    [ "$console" ] || console=/proc/$$/fd/1
+fi
+
+print() {
+    if [ "$1" ]; then
+        echo "ui_print $1" > "$console"
+    else
+        echo "ui_print  " > "$console"
+    fi
+    echo
+}
+
+abort() {
+    [ "$1" ] && {
+        print "Error: $1"
+        print "Aborting..."
+    }
+    cleanup
+    print "Failed to install brevent!"
+    exit 1
+}
+
+cleanup() {
+    [ "$zip" ] && rm /tmp/console
+    [ -d "$tmp" ] && rm -rf "$tmp"
+}
+
+extract() {
+    rm -rf "$2"
+    mkdir -p "$2"
+    unzip -o "$1" -d "$2" || abort "Failed to extract zip to $2!"
+}
+
+setperm() {
+    find "$3" -type d -exec chmod "$1" {} \;
+    find "$3" -type f -exec chmod "$2" {} \;
+}
+
+print "***************************"
+print "* MIUI 9 (EU) Cleaner Fix *"
+print "***************************"
+print "version: $ver"
+
+print "Mounting filesystems..."
+mount /system
+
+[ "$zip" ] && {
+    extract "$zip" "$tmp"
+}
+cd "$tmp"
+
+app_list=""
+for f in ./system/priv-app/*; do
+    app_list="${app_list} /system/priv-app/$(basename $f)"
+done
+
+print "Clean files..."
+rm -rf $app_list
+
+print "Adding files..."
+cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed copy apps"
+
+print "Setting correct permissions..."
+for f in $app_list; do
+    print "Fixing permission: $f"
+    setperm 0755 0644 $f
+done
+
+umount /system
+cleanup
+print "Finished!"
