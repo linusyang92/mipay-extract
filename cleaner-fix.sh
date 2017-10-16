@@ -6,8 +6,8 @@ mipay_apps="CleanMaster"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
-sdat2img="python2.7 $tool_dir/sdat2img/sdat2img.py"
-heapsize=2048
+sdat2img="python2.7 $tool_dir/sdat2img.py"
+heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 aria2c_opts="--file-allocation trunc -s10 -x10 -j10 -c"
@@ -42,6 +42,11 @@ else
     exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
+    if [[ "$OSTYPE" == "cygwin"* ]]; then
+        sdat2img="python2.7 ../tools/sdat2img.py"
+        smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
+        baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
+    fi
 fi
 
 clean() {
