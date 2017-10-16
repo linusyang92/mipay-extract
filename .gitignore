@@ -4,3 +4,4 @@
 /miui*-*/
 *.pyc
 *.aria2
+/tools/win32/
