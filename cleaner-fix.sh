@@ -118,7 +118,7 @@ deodex() {
         $aapt add -fk $apkfile $deoappdir/$app/classes.dex || return 1
         rm -f $deoappdir/$app/classes.dex
         if [[ "$app" == "Weather" ]]; then
-            $sign $apkfile
+            $sign $apkfile || return 1
             if [ -f $deoappdir/$app/$app.s.apk ]; then
                 echo "----> signed: $app.apk"
                 mv $deoappdir/$app/$app.s.apk $apkfile
