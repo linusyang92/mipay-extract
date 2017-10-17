@@ -2,11 +2,12 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="CleanMaster"
+mipay_apps="CleanMaster Calendar"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
 sdat2img="python2.7 $tool_dir/sdat2img.py"
+patchmethod="python2.7 $tool_dir/patchmethod.py"
 heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
@@ -44,6 +45,7 @@ else
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
+        patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
     fi
@@ -81,6 +83,12 @@ deodex() {
         echo "--> deodexing $app..."
             dexclass="classes.dex"
             $baksmali d $deoappdir/$app/$app.apk -o $deoappdir/$app/smali || return 1
+            if [[ "$app" == "Calendar" ]]; then
+                $patchmethod $deoappdir/$app/smali/com/miui/calendar/util/LocalizationUtils.smali \
+                             isGreaterChina isMainlandChina \
+                             showSummaryCard showsDayDiff showsHuangli \
+                             showsLunarDate showsWidgetHoliday || return 1
+            fi
             $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
             rm -rf $deoappdir/$app/smali
             if [[ ! -f $deoappdir/$app/$dexclass ]]; then
@@ -148,8 +156,8 @@ extract() {
     mkdir -p $(dirname $ubin)
     cp "$tool_dir/update-binary-cleaner" $ubin
     $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
-    rm -f ../../cleaner-$model-$ver.zip system/build.prop
-    $sevenzip a -tzip ../../cleaner-$model-$ver.zip . >/dev/null
+    rm -f ../../eufix-$model-$ver.zip system/build.prop
+    $sevenzip a -tzip ../../eufix-$model-$ver.zip . >/dev/null
     trap - INT
     popd
     echo "--> done"

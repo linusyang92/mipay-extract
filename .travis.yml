@@ -18,7 +18,9 @@ deploy:
   api_key:
     secure: ktB6LEjUzLrTMLP4fNd5lJUd/0Q+E2QwIklVIn/Kz8nxWmeecTb6z9tFmTRoVVJqRD1Vt/y4tneN/8dF1D6nChdV/Pclrp9x4X+N4qK1MKZt5VZ14fksFmp4nU0zo1KOvSSTlXuNGWGS/94asuATWF7iJmUNdJuERImfsbxMG/GE+EY6+YG+D4Qux/bZVVj6QqtqEsXWRdpwOEh4GlBv/XR42GBCG5m1bOxvcjNnZuYW9k1kZAhSAKcSHDo3ezzrwN0vc0eW0PwjQRkCF6n/sQ/1YX+Lu1f7Za2AydjJAcMQX7VhxA5psLXRFus7VhkAizzcRHyRk09EFZO/A5rKt9Oewhton6h46DY6aPWWwRcAuu0CA74EbXzAnhmZSDpLSN3sO0HodV1yEIfH+fC7lz4aAy4y2GK3QYzMlVK9Q8qmtjwFJCg4Y+c5y9pRfORCi2l59pPw6FUEcDpAmAYC6cYiyqLNR16DbFZdwCG6sQDsZYcTMw9VjL/tnfH0LLEdq+6mOjZgh5Ctackvop06dY4gFAjGghmBiDoWNsQNzMHGq5qra6fg2gsC11oV39GuARF8xGEWRybxBB6oZ+2A6r5F9dr8ZRdgZlDP9VwZZYXCnEqZwU4StHG6bJU7c818cPrE6OHWubpvKN2NiTve/HnAg1DxH3bKaRq7enZTCAw=
   file_glob: true
-  file: mipay-*.zip
+  file:
+  - mipay-*.zip
+  - eufix-*.zip
   overwrite: true
   skip_cleanup: true
   on:
