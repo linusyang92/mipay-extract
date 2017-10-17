@@ -1,6 +1,7 @@
 *.swp
 *.DS_Store
-*.zip
+/*.zip
+/*.apk
 /miui*-*/
 *.pyc
 *.aria2

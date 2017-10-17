@@ -6,7 +6,7 @@ import os
 
 STUB_METHOD = '''\
     .locals 1
-    const/4 v0, 0x1
+    const/4 v0, 0x%s
     return v0
 '''
 
@@ -26,18 +26,24 @@ def main():
     method_name = ''
     patched = ''
     overwriting = False
+    overvalue = '1'
     for line in smali.splitlines():
         method_line = re.search(r'\.method\s+(?:public\s+)?(?:static\s+)?([^\(]+)\(', line)
         if method_line:
             method_name = method_line.group(1)
             if method_name in method_set:
                 overwriting = True
+                overvalue = '1'
+            if ('-' + method_name) in method_set:
+                overwriting = True
+                overvalue = '0'
             patched += line + '\n'
         elif '.end method' in line:
             if overwriting:
                 overwriting = False
-                patched += STUB_METHOD + line + '\n'
-                print('----> patched method: ' + method_name)
+                patched += (STUB_METHOD % overvalue) + line + '\n'
+                print('----> patched method: ' + method_name + \
+                      ' => ' + ('true' if overvalue == '1' else 'false'))
             else:
                 patched += line + '\n'
         else:

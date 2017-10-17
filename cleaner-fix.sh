@@ -11,6 +11,7 @@ patchmethod="python2.7 $tool_dir/patchmethod.py"
 heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
+sign="java -Xmx${heapsize}m -jar $tool_dir/sign.jar"
 aria2c_opts="--file-allocation trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
@@ -48,6 +49,7 @@ else
         patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
+        sign="java -Xmx${heapsize}m -jar ../../tools/sign.jar"
     fi
 fi
 
@@ -70,7 +72,7 @@ deodex() {
     app=$2
     base_dir="$1"
     arch=$3
-    deoappdir=system/priv-app
+    deoappdir=system/$4
     deoarch=oat/$arch
     framedir=system/framework
     pushd "$base_dir"
@@ -87,6 +89,23 @@ deodex() {
                 $patchmethod $deoappdir/$app/smali/com/miui/calendar/util/LocalizationUtils.smali \
                              showsDayDiff showsLunarDate showsWidgetHoliday showsWorkFreeDay || return 1
             fi
+
+            if [[ "$app" == "Weather" ]]; then
+                find $deoappdir/$app/smali -type f -iname "*.smali" | while read i; do
+                    if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
+                        $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 v\1, 0x0|g' "$i" \
+                          || return 1
+                        if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
+                            echo "----> ! failed to patch: $(basename $i)"
+                        else
+                            echo "----> patched smali: $(basename $i)"
+                        fi
+                    fi
+                done
+                $patchmethod $deoappdir/$app/smali/com/miui/weather2/tools/ToolUtils.smali \
+                             -canRequestCommercial -canRequestCommercialInfo || return 1
+            fi
+
             $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
             rm -rf $deoappdir/$app/smali
             if [[ ! -f $deoappdir/$app/$dexclass ]]; then
@@ -97,6 +116,9 @@ deodex() {
         $sevenzip d "$apkfile" $dexclass >/dev/null
         $aapt add -fk $apkfile $deoappdir/$app/classes.dex || return 1
         rm -f $deoappdir/$app/classes.dex
+        if [[ "$app" == "Weather" ]]; then
+            $sign $apkfile --overwrite
+        fi
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
         $sevenzip x -o$deoappdir/$app $apkfile lib >/dev/null
@@ -150,8 +172,14 @@ extract() {
     done
     arch="arm64"
     for f in $apps; do
-        deodex "$work_dir" "$f" "$arch" || clean "$work_dir"
+        deodex "$work_dir" "$f" "$arch" priv-app || clean "$work_dir"
     done
+
+    echo "--> patching weather"
+    $sevenzip x -odeodex/system/ "$img" data-app/Weather >/dev/null || clean "$work_dir"
+    deodex "$work_dir" Weather "$arch" data-app || clean "$work_dir"
+    mv deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver.apk
+    rm -rf deodex/system/data-app/
 
     echo "--> packaging flashable zip"
     pushd deodex

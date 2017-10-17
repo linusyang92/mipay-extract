@@ -21,6 +21,7 @@ deploy:
   file:
   - mipay-*.zip
   - eufix-*.zip
+  - weather-*.apk
   overwrite: true
   skip_cleanup: true
   on:
