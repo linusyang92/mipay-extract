@@ -87,7 +87,8 @@ deodex() {
             $baksmali d $deoappdir/$app/$app.apk -o $deoappdir/$app/smali || return 1
             if [[ "$app" == "Calendar" ]]; then
                 $patchmethod $deoappdir/$app/smali/com/miui/calendar/util/LocalizationUtils.smali \
-                             showsDayDiff showsLunarDate showsWidgetHoliday showsWorkFreeDay || return 1
+                             showsDayDiff showsLunarDate showsWidgetHoliday showsWorkFreeDay \
+                             -isMainlandChina -isGreaterChina || return 1
             fi
 
             if [[ "$app" == "Weather" ]]; then
@@ -176,9 +177,11 @@ extract() {
     done
 
     echo "--> patching weather"
+    rm -f ../weather-*.apk
     $sevenzip x -odeodex/system/ "$img" data-app/Weather >/dev/null || clean "$work_dir"
+    cp deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver-orig.apk
     deodex "$work_dir" Weather "$arch" data-app || clean "$work_dir"
-    mv deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver.apk
+    mv deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver-mod.apk
     rm -rf deodex/system/data-app/
 
     echo "--> packaging flashable zip"
