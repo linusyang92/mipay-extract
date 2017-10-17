@@ -132,14 +132,20 @@ extract() {
     echo "--> rom: $model v$ver"
     [ -d $dir ] || mkdir $dir
     pushd $dir
-    trap "clean \"$PWD/system.new.dat\"" INT
-    [ -f system.new.dat ] || \
-      $sevenzip x ../$file "system.new.dat" "system.transfer.list" || \
-      clean system.new.dat 
+    if ! [ -f $img ]; then
+        trap "clean \"$PWD/system.new.dat\"" INT
+        if ! [ -f system.new.dat ]; then
+            $sevenzip x ../$file "system.new.dat" "system.transfer.list" \
+            && rm -f ../$file \
+            || clean system.new.dat
+        fi
+    fi
     trap "clean \"$PWD/$img\"" INT
-    [ -f $img ] || \
-      $sdat2img system.transfer.list system.new.dat $img 2>/dev/null || \
-      clean $img
+    if ! [ -f $img ]; then
+        $sdat2img system.transfer.list system.new.dat $img 2>/dev/null \
+        && rm -f "system.new.dat" "system.transfer.list" \
+        || clean $img
+    fi
 
     echo "--> image extracted: $img"
     work_dir="$PWD/deodex"

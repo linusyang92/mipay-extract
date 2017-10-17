@@ -21,6 +21,7 @@ for i in "${urls[@]}"
 do
    bash extract.sh "$i" || exit 1
 done
+rm -rf miui-*/
 for i in "${eu_urls[@]}"
 do
    bash cleaner-fix.sh "$i" || exit 1
