@@ -126,7 +126,6 @@ extract() {
         trap "clean \"$PWD/system.new.dat\"" INT
         if ! [ -f system.new.dat ]; then
             $sevenzip x ../$file "system.new.dat" "system.transfer.list" \
-            && rm -f ../$file \
             || clean system.new.dat
         fi
     fi
