@@ -118,7 +118,14 @@ deodex() {
         $aapt add -fk $apkfile $deoappdir/$app/classes.dex || return 1
         rm -f $deoappdir/$app/classes.dex
         if [[ "$app" == "Weather" ]]; then
-            $sign $apkfile --overwrite
+            $sign $apkfile
+            if [ -f $deoappdir/$app/$app.s.apk ]; then
+                echo "----> signed: $app.apk"
+                mv $deoappdir/$app/$app.s.apk $apkfile
+            else
+                echo "----> cannot sign $app.apk"
+                return 1
+            fi
         fi
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
