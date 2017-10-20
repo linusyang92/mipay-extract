@@ -3,11 +3,11 @@
 declare -a urls=(
 
 # Rom URLs
-"http://bigota.d.miui.com/7.10.12/miui_MIMIX2_7.10.12_c1c2bdeca7_7.1.zip"
+"http://bigota.d.miui.com/7.10.19/miui_MIMIX2_7.10.19_0067274b35_7.1.zip"
 
 )
 
-EU_VER=7.10.12
+EU_VER=7.10.19
 
 declare -a eu_urls=(
 
