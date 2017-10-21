@@ -3,7 +3,6 @@
 cd "$(dirname "$0")"
 
 mipay_apps="Mipay TSMClient UPTsmService"
-priv_apps="SecurityCenter"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
@@ -71,7 +70,7 @@ deodex() {
     app=$2
     base_dir="$1"
     arch=$3
-    deoappdir=system/$4
+    deoappdir=system/app
     deoarch=oat/$arch
     framedir=system/framework
     pushd "$base_dir"
@@ -160,10 +159,6 @@ extract() {
         echo "----> copying $f..."
         $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
     done
-    for f in $priv_apps; do
-        echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
-    done
     archs="arm64 x86_64 arm x86"
     arch="arm64"
     frame="$($sevenzip l "$img" framework)"
@@ -178,10 +173,7 @@ extract() {
     rm -f "$work_dir"/{$libmd,$libln}
     touch "$work_dir"/{$libmd,$libln}
     for f in $apps; do
-        deodex "$work_dir" "$f" "$arch" app || clean "$work_dir"
-    done
-    for f in $priv_apps; do
-        deodex "$work_dir" "$f" "$arch" priv-app || clean "$work_dir"
+        deodex "$work_dir" "$f" "$arch" || clean "$work_dir"
     done
 
     echo "--> packaging flashable zip"

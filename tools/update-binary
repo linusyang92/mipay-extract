@@ -65,16 +65,12 @@ app_list=""
 for f in ./system/app/*; do
     app_list="${app_list} /system/app/$(basename $f)"
 done
-for f in ./system/priv-app/*; do
-    app_list="${app_list} /system/priv-app/$(basename $f)"
-done
 
 print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
 cp -R ./system/app/* /system/app/ || abort "Failed copy apps"
-cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed copy apps"
 #mkdir_symlink
 
 print "Setting correct permissions..."
