@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="CleanMaster Calendar"
+mipay_apps="CleanMaster Calendar SecurityCenter"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
