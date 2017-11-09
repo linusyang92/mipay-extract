@@ -70,6 +70,7 @@ deodex() {
     app=$2
     base_dir="$1"
     arch=$3
+    system_img=$4
     deoappdir=system/app
     deoarch=oat/$arch
     framedir=system/framework
@@ -111,11 +112,34 @@ deodex() {
         for f in $deoappdir/$app/lib/$arch/*.so; do
             if ! grep -q ELF $f; then
                 fname=$(basename $f)
-                echo "ln -s $(cat $f) /system/app/$app/lib/$arch/$fname" >> $libln
-                rm -f "$f"
+                orig="$(cat $f)"
+                imgpath="${orig#*system/}"
+                imglist="$($sevenzip l "$system_img" "$imgpath")"
+                if [[ "$imglist" == *"$imgpath"* ]]; then
+                    echo "----> copy native library $fname"
+                    output_dir=$deoappdir/$app/lib/$arch/tmp
+                    $sevenzip x -o"$output_dir" "$system_img" "$imgpath" >/dev/null || return 1
+                    mv "$output_dir/$imgpath" $f
+                    rm -Rf $output_dir
+                else
+                    echo "ln -s $orig /system/app/$app/lib/$arch/$fname" >> $libln
+                    rm -f "$f"
+                fi
             fi
         done
         [ -z "$(ls -A $deoappdir/$app/lib/$arch)" ] && rm -rf "$deoappdir/$app/lib"
+    else
+        if [[ "$app" == "UPTsmService" ]]; then
+            echo "----> extract native library..."
+            apkfile=$deoappdir/$app/$app.apk
+            path=$deoappdir/$app
+            soarch="arm64-v8a"
+            if [[ "$arch" == "arm" ]]; then
+                soarch="armeabi-v7a"
+            fi
+            $sevenzip x -o"$path" "$apkfile" "lib/$soarch" >/dev/null || return 1
+            mv "$path/lib/$soarch" "$path/lib/$arch"
+        fi
     fi
     popd
     return 0
@@ -138,6 +162,7 @@ extract() {
             $sevenzip x ../$file "system.new.dat" "system.transfer.list" \
             && rm -f ../$file \
             || clean system.new.dat
+            touch ../$file
         fi
     fi
     trap "clean \"$PWD/$img\"" INT
@@ -173,7 +198,7 @@ extract() {
     rm -f "$work_dir"/{$libmd,$libln}
     touch "$work_dir"/{$libmd,$libln}
     for f in $apps; do
-        deodex "$work_dir" "$f" "$arch" || clean "$work_dir"
+        deodex "$work_dir" "$f" "$arch" "$PWD/$img" || clean "$work_dir"
     done
 
     echo "--> packaging flashable zip"
