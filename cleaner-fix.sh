@@ -211,7 +211,6 @@ extract() {
 trap "echo '--> abort'; exit 1" INT
 declare -a darr=("$@")
 for i in "${darr[@]}"; do
-    [[ "$OSTYPE" == "darwin"* ]] || check aria2c
     echo "--> Downloading $(basename $i)"
     $aria2c $i || exit 1
 done

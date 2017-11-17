@@ -44,6 +44,7 @@ else
     exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
+    exists aria2c || aria2c="$tool_dir/aria2c $aria2c_opts"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
@@ -221,7 +222,6 @@ extract() {
 trap "echo '--> abort'; exit 1" INT
 declare -a darr=("$@")
 for i in "${darr[@]}"; do
-    [[ "$OSTYPE" == "darwin"* ]] || check aria2c
     echo "--> Downloading $(basename $i)"
     $aria2c $i || exit 1
 done
