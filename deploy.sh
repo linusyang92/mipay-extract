@@ -18,17 +18,19 @@ declare -a eu_urls=(
 
 command -v dirname >/dev/null 2>&1 && cd "$(dirname "$0")"
 if [[ "$1" == "rom" ]]; then
-    ! [ -z "$2" ] && EU_VER=$2
+    base_dir=/sdcard/TWRP/rom
+    [ -z "$2" ] && VER="$EU_VER" || VER=$2
+    [ -d "$base_dir" ] || base_dir=.
     aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
-    aria2c="aria2c $aria2c_opts -d /sdcard/TWRP/rom/$EU_VER"
+    aria2c="aria2c $aria2c_opts -d $base_dir/$VER"
     for i in "${eu_urls[@]}"
     do
-        $aria2c $i
+        $aria2c ${i//$EU_VER/$VER}
     done
-    base_url="https://github.com/linusyang92/mipay-extract/releases/download/$EU_VER"
-    $aria2c $base_url/eufix-MiMix2-$EU_VER.zip
-    $aria2c $base_url/mipay-MIMIX2-$EU_VER.zip
-    $aria2c $base_url/weather-MiMix2-$EU_VER-mod.apk
+    base_url="https://github.com/linusyang92/mipay-extract/releases/download/$VER"
+    $aria2c $base_url/eufix-MiMix2-$VER.zip
+    $aria2c $base_url/mipay-MIMIX2-$VER.zip
+    $aria2c $base_url/weather-MiMix2-$VER-mod.apk
     exit 0
 fi
 for i in "${urls[@]}"
