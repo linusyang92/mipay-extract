@@ -12,7 +12,7 @@ heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 sign="java -Xmx${heapsize}m -jar $tool_dir/sign.jar"
-aria2c_opts="--file-allocation trunc -s10 -x10 -j10 -c"
+aria2c_opts="--check-certificate false --file-allocation trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
 
@@ -44,6 +44,7 @@ else
     exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
+    exists aria2c || aria2c="$tool_dir/aria2c $aria2c_opts"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         patchmethod="python2.7 ../../tools/patchmethod.py"

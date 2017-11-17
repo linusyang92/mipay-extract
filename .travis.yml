@@ -7,7 +7,6 @@ branches:
 addons:
   apt:
     packages:
-    - aria2
     - python2.7
 before_script:
 - unset _JAVA_OPTIONS
