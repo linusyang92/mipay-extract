@@ -18,7 +18,7 @@ declare -a eu_urls=(
 
 command -v dirname >/dev/null 2>&1 && cd "$(dirname "$0")"
 if [[ "$1" == "rom" ]]; then
-    aria2c_opts="--check-certificate false --file-allocation trunc -s10 -x10 -j10 -c"
+    aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
     aria2c="aria2c $aria2c_opts -d /sdcard/TWRP/rom/$EU_VER"
     for i in "${eu_urls[@]}"
     do

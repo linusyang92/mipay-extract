@@ -12,7 +12,7 @@ heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 sign="java -Xmx${heapsize}m -jar $tool_dir/sign.jar"
-aria2c_opts="--check-certificate false --file-allocation trunc -s10 -x10 -j10 -c"
+aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
 

@@ -12,7 +12,7 @@ smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
 libmd="libmd.txt"
 libln="libln.txt"
-aria2c_opts="--check-certificate false --file-allocation trunc -s10 -x10 -j10 -c"
+aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
 
