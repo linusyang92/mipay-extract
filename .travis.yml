@@ -4,6 +4,7 @@ jdk:
 branches:
   except:
   - master
+  - save
 addons:
   apt:
     packages:
