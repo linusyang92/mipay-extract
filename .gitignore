@@ -6,3 +6,4 @@
 *.pyc
 *.aria2
 /tools/win32/
+compare/

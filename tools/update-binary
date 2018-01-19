@@ -2,6 +2,7 @@
 
 ver=
 tmp=/tmp/mipay-apps
+default_prop=/system/build.prop
 
 if [ "$3" ]; then
     zip=$3
@@ -28,7 +29,7 @@ abort() {
         print "Aborting..."
     }
     cleanup
-    print "Failed to install brevent!"
+    print "Failed to install mipay addons!"
     exit 1
 }
 
@@ -48,6 +49,14 @@ setperm() {
     find "$3" -type f -exec chmod "$2" {} \;
 }
 
+setprop() {
+    if grep -q "^[[:space:]]*$1[[:space:]]*=" "$default_prop"; then
+        sed -i "s/^[[:space:]]*$1[[:space:]]*=.*$/$1=$2/g" "$default_prop"
+    else
+        echo "$1=$2" >> "$default_prop"
+    fi
+}
+
 print "****************************"
 print "* MIUI 9 (EU) MiPay Addons *"
 print "****************************"
@@ -55,6 +64,10 @@ print "version: $ver"
 
 print "Mounting filesystems..."
 mount /system
+if mount | grep ro | grep -q /system; then
+    mount -o remount,rw /system || print "Failed to mount read-write!"
+    print 'Remount as read-write...'
+fi
 
 [ "$zip" ] && {
     extract "$zip" "$tmp"
@@ -79,6 +92,9 @@ for f in $app_list; do
     setperm 0755 0644 $f
 done
 #do_symlink
+
+print "Fixing build.prop for MiPay..."
+setprop "ro.se.type" "eSE,HCE,UICC" || abort "Failed to patch build.prop"
 
 umount /system
 cleanup

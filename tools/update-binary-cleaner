@@ -28,7 +28,7 @@ abort() {
         print "Aborting..."
     }
     cleanup
-    print "Failed to install brevent!"
+    print "Failed to install xiaomi.eu rom fix!"
     exit 1
 }
 
@@ -48,6 +48,16 @@ setperm() {
     find "$3" -type f -exec chmod "$2" {} \;
 }
 
+try_del() {
+    app=/system/$1
+    if [ -d $app ]; then
+        print "Removing ${app}..."
+        rm -r "$app" || print "failed to remove $app"
+    else
+        print "Skipping ${app}"
+    fi
+}
+
 print "***************************"
 print "* MIUI 9 (EU) Cleaner Fix *"
 print "***************************"
@@ -55,6 +65,10 @@ print "version: $ver"
 
 print "Mounting filesystems..."
 mount /system
+if mount | grep ro | grep -q /system; then
+    mount -o remount,rw /system || print "Failed to mount read-write!"
+    print 'Remount as read-write...'
+fi
 
 [ "$zip" ] && {
     extract "$zip" "$tmp"
@@ -70,13 +84,16 @@ print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
-cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed copy apps"
+cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy apps"
 
 print "Setting correct permissions..."
 for f in $app_list; do
     print "Fixing permission: $f"
     setperm 0755 0644 $f
 done
+
+print "Removing evil apps..."
+try_del app/MiuiDaemon
 
 umount /system
 cleanup

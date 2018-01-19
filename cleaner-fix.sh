@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="CleanMaster Calendar SecurityCenter"
+mipay_apps="Calendar SecurityCenter"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
@@ -11,7 +11,9 @@ patchmethod="python2.7 $tool_dir/patchmethod.py"
 heapsize=1024
 smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
-sign="java -Xmx${heapsize}m -jar $tool_dir/sign.jar"
+keypass="--ks-pass pass:testkey --key-pass pass:testkey"
+sign="java -Xmx${heapsize}m -jar $tool_dir/apksigner.jar sign \
+      --ks $tool_dir/testkey.jks $keypass"
 aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
@@ -50,7 +52,8 @@ else
         patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
-        sign="java -Xmx${heapsize}m -jar ../../tools/sign.jar"
+        sign="java -Xmx${heapsize}m -jar ../../tools/apksigner.jar sign \
+              --ks ../../tools/testkey.jks $keypass"
     fi
 fi
 
@@ -104,8 +107,10 @@ deodex() {
                         fi
                     fi
                 done
-                $patchmethod $deoappdir/$app/smali/com/miui/weather2/tools/ToolUtils.smali \
-                             -canRequestCommercial -canRequestCommercialInfo || return 1
+                i="$deoappdir/$app/smali/com/miui/weather2/tools/ToolUtils.smali"
+                if [ -f "$i" ]; then
+                    $patchmethod "$i" -canRequestCommercial -canRequestCommercialInfo || return 1
+                fi
             fi
 
             if [[ "$app" == "SecurityCenter" ]]; then
@@ -129,18 +134,16 @@ deodex() {
         $sevenzip d "$apkfile" $dexclass >/dev/null
         $aapt add -fk $apkfile $deoappdir/$app/classes.dex || return 1
         rm -f $deoappdir/$app/classes.dex
+        $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
+        mv $apkfile-2 $apkfile
         if [[ "$app" == "Weather" ]]; then
-            $sign $apkfile || return 1
-            if [ -f $deoappdir/$app/$app.s.apk ]; then
+            if $sign $apkfile; then
                 echo "----> signed: $app.apk"
-                mv $deoappdir/$app/$app.s.apk $apkfile
             else
                 echo "----> cannot sign $app.apk"
                 return 1
             fi
         fi
-        $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
-        mv $apkfile-2 $apkfile
         if ! [ -d $deoappdir/$app/lib ]; then
             $sevenzip x -o$deoappdir/$app $apkfile lib >/dev/null
             if [ -d $deoappdir/$app/lib ]; then
