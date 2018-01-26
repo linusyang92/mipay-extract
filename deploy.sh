@@ -18,7 +18,7 @@ declare -a eu_urls=(
 
 command -v dirname >/dev/null 2>&1 && cd "$(dirname "$0")"
 if [[ "$1" == "rom" ]]; then
-    base_dir=/sdcard/TWRP/rom
+    base_dir=/sdcard/TWRP
     [ -z "$2" ] && VER="$EU_VER" || VER=$2
     [ -d "$base_dir" ] || base_dir=.
     aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
