@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="CleanMaster Calendar SecurityCenter Mms"
+mipay_apps="CleanMaster Calendar SecurityCenter"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
@@ -122,15 +122,6 @@ deodex() {
                 else
                     echo "----> patched smali: $(basename $i)"
                 fi
-            fi
-
-            if [[ "$app" == "Mms" ]]; then
-                i="$deoappdir/$app/smali/com/android/mms/util/VerificationCodeUtils.smali"
-                $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 v\1, 0x0|g' "$i" \
-                  || return 1
-                $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_GLOBAL_BUILD:Z|const/4 v\1, 0x0|g' "$i" \
-                  || return 1
-                echo "----> patched smali: $(basename $i)"
             fi
 
             $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
