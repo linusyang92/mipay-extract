@@ -112,12 +112,12 @@ func getMiui() (version string, url string) {
 	return
 }
 
-func getEu() (version string, url string) {
+func getEu(miuiVer string) (version string, url string) {
 	logger.Log("Fetching xiaomi.eu version info...")
 	version = "0.0.0"
 	url = ""
 	p := gofeed.NewParser()
-	feed, err := p.ParseURL(SfReleaseUrl)
+	feed, err := p.ParseURL(SfReleaseUrl + "/" + miuiVer)
 	if err != nil {
 		logger.Error("Failed to parse rss", err)
 		return
@@ -183,7 +183,7 @@ func getNewDeploy(currentVer, currentDeploy string,
 	err = nil
 	if miuiVer > currentVer || force {
 		version = miuiVer
-		euVer, euUrl = getEu()
+		euVer, euUrl = getEu(miuiVer)
 		if euVer == miuiVer || force {
 			deploy = newDeployFile(miuiVer, miuiUrl, euUrl, currentDeploy)
 		}
