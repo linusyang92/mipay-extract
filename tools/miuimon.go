@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -55,7 +56,7 @@ func (m *MyLogger) Log(format string, v ...interface{}) {
 	m.logger.Printf(format+"\n", v...)
 }
 
-var logger = MyLogger{
+var logger = &MyLogger{
 	logger: log.New(os.Stderr, "", log.LstdFlags),
 }
 
@@ -280,14 +281,18 @@ func updateGithub(token string) (retCode int) {
 }
 
 func main() {
+	ret := 0
+	defer func() {
+		os.Exit(ret)
+	}()
 	token := ""
 	if len(os.Args) > 1 {
 		token = os.Args[1]
 	} else {
-		fmt.Fprintf(os.Stderr, "Usage: %s <Github API token>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s <Github API token>\n", path.Base(os.Args[0]))
+		ret = 1
 		return
 	}
 	logger.Log("MIUI update checker - Device: %v", SfReleaseModel)
-	ret := updateGithub(token)
-	os.Exit(ret)
+	ret = updateGithub(token)
 }
