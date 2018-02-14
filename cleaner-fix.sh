@@ -91,7 +91,7 @@ deodex() {
             $baksmali d $deoappdir/$app/$app.apk -o $deoappdir/$app/smali || return 1
             if [[ "$app" == "Calendar" ]]; then
                 $patchmethod $deoappdir/$app/smali/com/miui/calendar/util/LocalizationUtils.smali \
-                             showsDayDiff showsLunarDate showsWidgetHoliday showsWorkFreeDay \
+                             showsDayDiff showsLunarDate showsWidgetHoliday -showsWorkFreeDay \
                              -isMainlandChina -isGreaterChina || return 1
             fi
 
