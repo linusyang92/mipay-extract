@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="Mipay TSMClient UPTsmService"
+mipay_apps="Mipay TSMClient UPTsmService NextPay"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
