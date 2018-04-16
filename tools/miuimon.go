@@ -124,7 +124,7 @@ func getEu(miuiVer string) (version string, url string) {
 		return
 	}
 	for _, item := range feed.Items {
-		if strings.Contains(item.Title, SfReleaseModel) {
+		if strings.Contains(item.Title, SfReleaseModel+"_") {
 			url = SfDownBaseUrl + item.Title
 			f := strings.Split(item.Title, "/")
 			if len(f) > 0 {
