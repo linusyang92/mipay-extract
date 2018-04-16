@@ -3,6 +3,7 @@
 cd "$(dirname "$0")"
 
 mipay_apps="Mipay TSMClient UPTsmService"
+[ -z "$EXTRA" ] || mipay_apps="$mipay_apps $EXTRA"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
