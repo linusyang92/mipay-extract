@@ -200,6 +200,8 @@ extract() {
         deodex "$work_dir" "$f" "$arch" priv-app || clean "$work_dir"
     done
 
+    file_list="$($sevenzip l "$img" data-app/Weather)"
+    if [[ "$file_list" == *Weather* ]]; then
     echo "--> patching weather"
     rm -f ../weather-*.apk
     $sevenzip x -odeodex/system/ "$img" data-app/Weather >/dev/null || clean "$work_dir"
@@ -207,6 +209,7 @@ extract() {
     deodex "$work_dir" Weather "$arch" data-app || clean "$work_dir"
     mv deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver-mod.apk
     rm -rf deodex/system/data-app/
+    fi
 
     echo "--> packaging flashable zip"
     pushd deodex
