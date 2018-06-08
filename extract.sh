@@ -39,6 +39,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     aapt="$tool_dir/darwin/aapt"
     zipalign="$tool_dir/darwin/zipalign"
     sevenzip="$tool_dir/darwin/7za"
+    brotli="$tool_dir/darwin/brotli"
     aria2c="$tool_dir/darwin/aria2c $aria2c_opts"
     sed="$tool_dir/darwin/gsed"
 else
@@ -46,6 +47,7 @@ else
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
     exists aria2c || aria2c="$tool_dir/aria2c $aria2c_opts"
+    exists brotli || brotli="$tool_dir/brotli"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
@@ -161,10 +163,15 @@ extract() {
     if ! [ -f $img ]; then
         trap "clean \"$PWD/system.new.dat\"" INT
         if ! [ -f system.new.dat ]; then
-            $sevenzip x ../$file "system.new.dat" "system.transfer.list" \
-            && rm -f ../$file \
-            || clean system.new.dat
-            touch ../$file
+            filelist="$($sevenzip l ../"$file")"
+            if [[ "$filelist" == *system.new.dat.br* ]]; then
+                $sevenzip x ../$file "system.new.dat.br" "system.transfer.list" \
+                || clean system.new.dat.br
+                $brotli -d system.new.dat.br && rm -f system.new.dat.br
+            else
+                $sevenzip x ../$file "system.new.dat" "system.transfer.list" \
+                || clean system.new.dat
+            fi
         fi
     fi
     trap "clean \"$PWD/$img\"" INT

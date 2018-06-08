@@ -6,4 +6,5 @@ copy tzdb.dat ..\win32\jre\lib\
 copy tzmappings ..\win32\jre\lib\
 copy jce.jar ..\win32\jre\lib\
 copy find.exe ..\win32\bin\
+copy brotli.exe ..\win32\bin\
 popd
