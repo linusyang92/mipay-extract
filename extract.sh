@@ -16,6 +16,7 @@ libln="libln.txt"
 aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
+vdex="vdexExtractor"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
@@ -40,6 +41,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     zipalign="$tool_dir/darwin/zipalign"
     sevenzip="$tool_dir/darwin/7za"
     brotli="$tool_dir/darwin/brotli"
+    vdex="$tool_dir/darwin/vdexExtractor"
     aria2c="$tool_dir/darwin/aria2c $aria2c_opts"
     sed="$tool_dir/darwin/gsed"
 else
@@ -48,6 +50,7 @@ else
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
     exists aria2c || aria2c="$tool_dir/aria2c $aria2c_opts"
     exists brotli || brotli="$tool_dir/brotli"
+    exists vdexExtractor || vdex="$tool_dir/vdexExtractor"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
@@ -83,13 +86,22 @@ deodex() {
     if [ -z "$api" ]; then
         api=25
     fi
+    hasvdex=false
+    if [[ $api -gt 26 ]]; then
+        echo "--> Android 8.1 detected"
+        hasvdex=true
+    fi
     file_list="$($sevenzip l "$deoappdir/$app/$app.apk")"
     if [[ "$file_list" == *"classes.dex"* ]]; then
         echo "--> already deodexed $app"
     else
         echo "--> deodexing $app..."
-        classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
-        echo "----> classes: $classes"
+        if [[ $hasvdex ]]; then
+            classes="classes.dex"
+        else
+            classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
+            echo "----> classes: $classes"
+        fi
         echo "$classes" | while read line; do
             apkdex=$(basename $(echo "$line"))
             if [[ $(echo "$apkdex" | grep classes) = "" ]]; then
@@ -97,9 +109,14 @@ deodex() {
             else
                 dexclass=$(echo "$apkdex" | cut -d":" -f2-)
             fi
-            $baksmali deodex -b $framedir/$arch/boot.oat $deoappdir/$app/$deoarch/$app.odex/$apkdex -o $deoappdir/$app/$deoarch/smali || return 1
-            $smali assemble -a $api $deoappdir/$app/$deoarch/smali -o $deoappdir/$app/$deoarch/$dexclass || return 1
-            rm -rf $deoappdir/$app/$deoarch/smali
+            if [[ $hasvdex ]]; then
+                $vdex -i $deoappdir/$app/$deoarch/$app.vdex -o $deoappdir/$app/$deoarch || return 1
+                mv $deoappdir/$app/$deoarch/$app.apk_$dexclass $deoappdir/$app/$deoarch/$dexclass
+            else
+                $baksmali deodex -b $framedir/$arch/boot.oat $deoappdir/$app/$deoarch/$app.odex/$apkdex -o $deoappdir/$app/$deoarch/smali || return 1
+                $smali assemble -a $api $deoappdir/$app/$deoarch/smali -o $deoappdir/$app/$deoarch/$dexclass || return 1
+                rm -rf $deoappdir/$app/$deoarch/smali
+            fi
             if [[ ! -f $deoappdir/$app/$deoarch/$dexclass ]]; then
                 echo "----> failed to baksmali: $deoappdir/$app/$deoarch/$dexclass"
                 continue
