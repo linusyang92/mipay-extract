@@ -136,7 +136,7 @@ deodex() {
         rm -f $deoappdir/$app/classes.dex
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
-        if [[ "$app" == "Weather" ]]; then
+        if [[ "$deoappdir" == "system/data-app" ]]; then
             if $sign $apkfile; then
                 echo "----> signed: $app.apk"
             else
@@ -191,6 +191,10 @@ extract() {
 
     echo "--> copying apps"
     $sevenzip x -odeodex/system/ "$img" build.prop >/dev/null || clean "$work_dir"
+    file_list="$($sevenzip l "$img" priv-app/Weather)"
+    if [[ "$file_list" == *Weather* ]]; then
+        apps="$apps Weather"
+    fi
     for f in $apps; do
         echo "----> copying $f..."
         $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
