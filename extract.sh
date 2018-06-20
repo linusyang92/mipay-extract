@@ -87,8 +87,8 @@ deodex() {
         api=25
     fi
     hasvdex=false
-    if [[ $api -gt 26 ]]; then
-        echo "--> Android 8.1 detected"
+    if [ -f "$deoappdir/$app/$deoarch/$app.vdex" ]; then
+        echo "--> vdex detected"
         hasvdex=true
     fi
     file_list="$($sevenzip l "$deoappdir/$app/$app.apk")"
@@ -96,7 +96,7 @@ deodex() {
         echo "--> already deodexed $app"
     else
         echo "--> deodexing $app..."
-        if [[ $hasvdex ]]; then
+        if $hasvdex; then
             classes="classes.dex"
         else
             classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
@@ -109,7 +109,7 @@ deodex() {
             else
                 dexclass=$(echo "$apkdex" | cut -d":" -f2-)
             fi
-            if [[ $hasvdex ]]; then
+            if $hasvdex; then
                 $vdex -i $deoappdir/$app/$deoarch/$app.vdex -o $deoappdir/$app/$deoarch || return 1
                 mv $deoappdir/$app/$deoarch/$app.apk_$dexclass $deoappdir/$app/$deoarch/$dexclass
             else
