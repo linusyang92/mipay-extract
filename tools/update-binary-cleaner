@@ -107,8 +107,8 @@ for f in $app_list; do
     setperm 0755 0644 $f
 done
 
-print "Removing evil apps..."
-try_del app/MiuiDaemon
+# print "Removing evil apps..."
+# try_del app/MiuiDaemon
 
 print "Enabling force encryption for Oreo..."
 force_encrypt_oreo
