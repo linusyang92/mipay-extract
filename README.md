@@ -32,6 +32,9 @@ For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and ru
 * progress (by @verigak)
 * smali/baksmali
 * SuperR's Kitchen
+* vdexExtractor
+* Google Android SDK
+* p7zip
 
 ## Disclaimer
 This repository is provided with no warranty. Make sure you have legal access to MIUI Roms if using this repository. If any files of this repository violate your copyright, please contact me to remove them.
