@@ -16,7 +16,7 @@ Automatic builds for selected devices are available in [releases](https://github
 
 ## Xiaomi.eu Rom Patches
 
-For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and run `cleaner-fix.sh` for creating a flashable zip with prefix `eufix-`. It contains patches for
+For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and run `cleaner-fix.sh` for creating a flashable zip with prefix `eufix`. It contains patches to
 
 1. Show Lunar dates in Calendar app.
 2. Fix FC of cleaner app.
@@ -24,7 +24,7 @@ For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and ru
 4. Use Chinese weather sources in Weather app.
 5. Force file-based encryption of `/data` partition for Oreo-based roms.
 
-**Use at your own risk!** Backup your data before flashing `eufix` package. Xiaomi.eu roms remove encryption by default. Re-enabling encryption may cause lost of your data.
+**Use at your own risk!** Backup your data before flashing `eufix` package. Xiaomi.eu roms remove encryption by default. Re-enabling encryption may cause loss of your data.
 
 ## Credits
 
