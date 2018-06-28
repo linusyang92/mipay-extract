@@ -14,6 +14,18 @@ apt-get install -y openjdk-8-jre python2.7
 
 Automatic builds for selected devices are available in [releases](https://github.com/linusyang92/mipay-extract/releases).
 
+## Xiaomi.eu Rom Patches
+
+For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and run `cleaner-fix.sh` for creating a flashable zip with prefix `eufix-`. It contains patches for
+
+1. Show Lunar dates in Calendar app.
+2. Fix FC of cleaner app.
+3. Show payment monitor options in setting page of Security app.
+4. Use Chinese weather sources in Weather app.
+5. Force file-based encryption of `/data` partition for Oreo-based roms.
+
+**Use at your own risk!** Backup your data before flashing `eufix` package. Xiaomi.eu roms remove encryption by default. Re-enabling encryption may cause lost of your data.
+
 ## Credits
 
 * sdat2img
