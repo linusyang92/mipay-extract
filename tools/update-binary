@@ -57,9 +57,23 @@ setprop() {
     fi
 }
 
-print "****************************"
-print "* MIUI 9 (EU) MiPay Addons *"
-print "****************************"
+rmcache() {
+    f="$1"
+    [ -d /data/dalvik-cache/ ] || return 0
+    app="$(echo $f | tr / @ | cut -c2-)"
+    [ -z "$app" ] && return 0
+    find /data/dalvik-cache/ -iname "${app}*" |
+        while read i; do
+            j="$(basename $i)"
+            print "Clean cache: ${j/${app}@/}"
+            rm -f "$i"
+        done
+}
+
+print "**************************"
+print "* MIUI 9/10 MiPay Addons *"
+print "**************************"
+print "by @linusyang"
 print "version: $ver"
 
 print "Mounting filesystems..."
@@ -90,14 +104,7 @@ print "Setting correct permissions..."
 for f in $app_list; do
     print "Fixing permission: $f"
     setperm 0755 0644 $f
-    if [ -d /data/dalvik-cache/ ]; then
-        app="$(echo $f | tr / @ | cut -c2-)"
-        find /data/dalvik-cache/ -iname "${app}*" |
-            while read i; do
-                print "Clean cache: $(basename $i)"
-                rm -f "$i"
-            done
-    fi
+    rmcache $f
 done
 #do_symlink
 

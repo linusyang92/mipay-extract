@@ -73,9 +73,23 @@ force_encrypt_oreo() {
     fi
 }
 
-print "***************************"
-print "* MIUI 9 (EU) Cleaner Fix *"
-print "***************************"
+rmcache() {
+    f="$1"
+    [ -d /data/dalvik-cache/ ] || return 0
+    app="$(echo $f | tr / @ | cut -c2-)"
+    [ -z "$app" ] && return 0
+    find /data/dalvik-cache/ -iname "${app}*" |
+        while read i; do
+            j="$(basename $i)"
+            print "Clean cache: ${j/${app}@/}"
+            rm -f "$i"
+        done
+}
+
+print "*******************************"
+print "* MIUI 9/10 xiaomi.eu Rom Fix *"
+print "*******************************"
+print "by @linusyang"
 print "version: $ver"
 
 print "Mounting filesystems..."
@@ -105,6 +119,7 @@ print "Setting correct permissions..."
 for f in $app_list; do
     print "Fixing permission: $f"
     setperm 0755 0644 $f
+    rmcache $f
 done
 
 # print "Removing evil apps..."
