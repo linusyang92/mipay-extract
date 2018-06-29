@@ -16,6 +16,8 @@ Automatic builds for selected devices are available in [releases](https://github
 
 ## Xiaomi.eu Rom Patches
 
+*Important Notes:* You must have an **encrypted** or **newly formatted** data partition to use these patches. Do not flash `eufix*.zip` if your data partition is decrypted. Otherwise, your device will get bricked!
+
 For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and run `cleaner-fix.sh` for creating a flashable zip with prefix `eufix`. It contains patches to
 
 1. Show Lunar dates in Calendar app.
