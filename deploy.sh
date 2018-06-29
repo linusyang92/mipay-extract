@@ -12,7 +12,7 @@ EU_VER=8.6.21
 declare -a eu_urls=(
 
 # EU Rom URLs
-'https://jaist.dl.sourceforge.net/project/xiaomi-eu-multilang-miui-roms/xiaomi.eu/MIUI-WEEKLY-RELEASES/8.6.14/xiaomi.eu_multi_MIMix2_8.6.21_v10-8.0.zip'
+'https://jaist.dl.sourceforge.net/project/xiaomi-eu-multilang-miui-roms/xiaomi.eu/MIUI-WEEKLY-RELEASES/8.6.21/xiaomi.eu_multi_MIMix2_8.6.21_v10-8.0.zip'
 
 )
 
