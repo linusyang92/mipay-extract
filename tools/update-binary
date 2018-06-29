@@ -62,10 +62,11 @@ rmcache() {
     [ -d /data/dalvik-cache/ ] || return 0
     app="$(echo $f | tr / @ | cut -c2-)"
     [ -z "$app" ] && return 0
+    app="${app}@"
     find /data/dalvik-cache/ -iname "${app}*" |
         while read i; do
             j="$(basename $i)"
-            print "Clean cache: ${j/${app}@/}"
+            print "Clean cache: ${j/${app}/}"
             rm -f "$i"
         done
 }
