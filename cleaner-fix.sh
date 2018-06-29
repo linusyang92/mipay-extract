@@ -241,6 +241,7 @@ for i in "${darr[@]}"; do
 done
 trap - INT
 
+hasfile=false
 for f in *.zip; do
     arr=(${f//_/ })
     if [[ "${arr[0]}" != "xiaomi.eu" ]]; then
@@ -253,6 +254,11 @@ for f in *.zip; do
     model=${arr[2]}
     ver=${arr[3]}
     extract $model $ver $f "$mipay_apps"
+    hasfile=true
 done
 
-echo "--> all done"
+if $hasfile; then
+    echo "--> all done"
+else
+    echo "--> Error: no eu rom detected"
+fi

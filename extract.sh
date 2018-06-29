@@ -278,5 +278,5 @@ done
 if $hasfile; then
     echo "--> all done"
 else
-    echo "--> Error: no rom detected"
+    echo "--> Error: no miui rom detected"
 fi
