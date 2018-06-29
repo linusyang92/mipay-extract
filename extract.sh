@@ -111,15 +111,18 @@ deodex() {
             fi
             if $hasvdex; then
                 $vdex -i $deoappdir/$app/$deoarch/$app.vdex -o $deoappdir/$app/$deoarch || return 1
-                mv $deoappdir/$app/$deoarch/$app.apk_$dexclass $deoappdir/$app/$deoarch/$dexclass
+                for f in $deoappdir/$app/$deoarch/$app.apk_*; do
+                    mv $f ${f/$app.apk_/} || return 1
+                    echo "----> classes: $(basename $f)"
+                done
             else
                 $baksmali deodex -b $framedir/$arch/boot.oat $deoappdir/$app/$deoarch/$app.odex/$apkdex -o $deoappdir/$app/$deoarch/smali || return 1
                 $smali assemble -a $api $deoappdir/$app/$deoarch/smali -o $deoappdir/$app/$deoarch/$dexclass || return 1
                 rm -rf $deoappdir/$app/$deoarch/smali
-            fi
-            if [[ ! -f $deoappdir/$app/$deoarch/$dexclass ]]; then
-                echo "----> failed to baksmali: $deoappdir/$app/$deoarch/$dexclass"
-                continue
+                if [[ ! -f $deoappdir/$app/$deoarch/$dexclass ]]; then
+                    echo "----> failed to baksmali: $deoappdir/$app/$deoarch/$dexclass"
+                    continue
+                fi
             fi
         done
         $aapt add -fk $deoappdir/$app/$app.apk $deoappdir/$app/$deoarch/classes*.dex || return 1
@@ -256,6 +259,7 @@ for i in "${darr[@]}"; do
 done
 trap - INT
 
+hasfile=false
 for f in *.zip; do
     arr=(${f//_/ })
     if [[ "${arr[0]}" != "miui" ]]; then
@@ -268,6 +272,11 @@ for f in *.zip; do
     model=${arr[1]}
     ver=${arr[2]}
     extract $model $ver $f "$mipay_apps"
+    hasfile=true
 done
 
-echo "--> all done"
+if $hasfile; then
+    echo "--> all done"
+else
+    echo "--> Error: no rom detected"
+fi

@@ -90,6 +90,14 @@ print "Setting correct permissions..."
 for f in $app_list; do
     print "Fixing permission: $f"
     setperm 0755 0644 $f
+    if [ -d /data/dalvik-cache/ ]; then
+        app="$(basename $f)"
+        find /data/dalvik-cache/ -iname "*${app}*" |
+            while read i; do
+                print "Clean cache: $(basename $i)"
+                rm -f "$i"
+            done
+    fi
 done
 #do_symlink
 
