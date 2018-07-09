@@ -10,6 +10,11 @@ STUB_METHOD = '''\
     return v0
 '''
 
+STUB_VOID = '''\
+    .locals 0
+    return-void
+'''
+
 def main():
     if len(sys.argv) < 2:
         print("No input file")
@@ -28,7 +33,7 @@ def main():
     overwriting = False
     overvalue = '1'
     for line in smali.splitlines():
-        method_line = re.search(r'\.method\s+(?:public\s+)?(?:static\s+)?([^\(]+)\(', line)
+        method_line = re.search(r'\.method\s+(?:(?:public|private)\s+)?(?:static\s+)?([^\(]+)\(', line)
         if method_line:
             method_name = method_line.group(1)
             if method_name in method_set:
@@ -37,13 +42,20 @@ def main():
             if ('-' + method_name) in method_set:
                 overwriting = True
                 overvalue = '0'
+            if ('--' + method_name) in method_set:
+                overwriting = True
+                overvalue = '-1'
             patched += line + '\n'
         elif '.end method' in line:
             if overwriting:
                 overwriting = False
-                patched += (STUB_METHOD % overvalue) + line + '\n'
-                print('----> patched method: ' + method_name + \
-                      ' => ' + ('true' if overvalue == '1' else 'false'))
+                if overvalue == '-1':
+                    patched += STUB_VOID + line + '\n'
+                    print('----> patched method: ' + method_name + ' => void')
+                else:
+                    patched += (STUB_METHOD % overvalue) + line + '\n'
+                    print('----> patched method: ' + method_name + \
+                          ' => ' + ('true' if overvalue == '1' else 'false'))
             else:
                 patched += line + '\n'
         else:

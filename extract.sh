@@ -3,7 +3,9 @@
 cd "$(dirname "$0")"
 
 mipay_apps="Mipay TSMClient UPTsmService"
+private_apps=""
 [ -z "$EXTRA" ] || mipay_apps="$mipay_apps $EXTRA"
+[ -z "$EXTRA_PRIV" ] || private_apps="$private_apps $EXTRA_PRIV"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
@@ -17,6 +19,7 @@ aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c
 aria2c="aria2c $aria2c_opts"
 sed="sed"
 vdex="vdexExtractor"
+patchmethod="python2.7 $tool_dir/patchmethod.py"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
@@ -53,6 +56,7 @@ else
     exists vdexExtractor || vdex="$tool_dir/vdexExtractor"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
+        patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
     fi
@@ -78,7 +82,7 @@ deodex() {
     base_dir="$1"
     arch=$3
     system_img=$4
-    deoappdir=system/app
+    deoappdir=system/$5
     deoarch=oat/$arch
     framedir=system/framework
     pushd "$base_dir"
@@ -131,7 +135,43 @@ deodex() {
         mv $apkfile-2 $apkfile
     fi
     rm -rf $deoappdir/$app/oat
-    if [ -d "$deoappdir/$app/lib/$arch" ]; then
+    if [[ "$app" == "PersonalAssistant" ]]; then
+        echo "----> extract native library..."
+        apkfile=$deoappdir/$app/$app.apk
+        path=$deoappdir/$app
+        arch=arm
+        soarch="armeabi"
+        $sevenzip x -o"$path" "$apkfile" "lib/$soarch" >/dev/null || return 1
+        mv "$path/lib/$soarch/"* "$path/lib/$arch/"
+        rm -r "$path/lib/$soarch"
+
+        echo "----> decompiling $app..."
+        dexclass="classes.dex"
+        $baksmali disassemble --debug-info false --output $deoappdir/$app/smali $apkfile || return 1
+
+        $patchmethod $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/AssistHolderController.smali \
+                     -needUpgradeApk || return 1
+        $patchmethod $deoappdir/$app/smali/com/miui/personalassistant/favorite/sync/MiuiFavoriteReceiver.smali \
+                     --onReceive || return 1
+        $sed -i '\|Lcom/miui/home/launcher/assistant/module/loader/RecommendManager;->initRecommend()V|d' \
+            $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/AssistHolderController'$1'.smali || return 1
+        $sed -i '\|Lcom/miui/home/launcher/assistant/ui/view/AssistHolderView;->initAi()V|d' \
+            $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/view/AssistHolderView.smali || return 1
+        $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_GLOBAL_BUILD:Z|const/4 v\1, 0x0|g' \
+            $deoappdir/$app/smali/com/miui/personalassistant/provider/PersonalAssistantProvider.smali || return 1
+
+        $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
+        rm -rf $deoappdir/$app/smali
+        if [[ ! -f $deoappdir/$app/$dexclass ]]; then
+            echo "----> failed to patch: $deoappdir/$app/$dexclass"
+            return 1
+        fi
+        $sevenzip d "$apkfile" $dexclass >/dev/null
+        $aapt add -fk $deoappdir/$app/$app.apk $deoappdir/$app/classes*.dex || return 1
+        rm -f $deoappdir/$app/classes.dex
+        $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
+        mv $apkfile-2 $apkfile
+    elif [ -d "$deoappdir/$app/lib/$arch" ]; then
         echo "mkdir -p /system/app/$app/lib/$arch" >> $libmd
         for f in $deoappdir/$app/lib/$arch/*.so; do
             if ! grep -q ELF $f; then
@@ -174,6 +214,7 @@ extract() {
     ver=$2
     file=$3
     apps=$4
+    priv_apps=$5
     dir=miui-$model-$ver
     img=$dir-system.img
 
@@ -213,6 +254,10 @@ extract() {
         echo "----> copying $f..."
         $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
     done
+    for f in $priv_apps; do
+        echo "----> copying $f..."
+        $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
+    done
     archs="arm64 x86_64 arm x86"
     arch="arm64"
     frame="$($sevenzip l "$img" framework)"
@@ -227,7 +272,10 @@ extract() {
     rm -f "$work_dir"/{$libmd,$libln}
     touch "$work_dir"/{$libmd,$libln}
     for f in $apps; do
-        deodex "$work_dir" "$f" "$arch" "$PWD/$img" || clean "$work_dir"
+        deodex "$work_dir" "$f" "$arch" "$PWD/$img" app || clean "$work_dir"
+    done
+    for f in $priv_apps; do
+        deodex "$work_dir" "$f" "$arch" "$PWD/$img" priv-app || clean "$work_dir"
     done
 
     echo "--> packaging flashable zip"
@@ -240,7 +288,16 @@ extract() {
     $sed -e '/#mkdir_symlink/ {' -e "r $libmd" -e 'd' -e '}' -i $ubin
     $sed -e '/#do_symlink/ {' -e "r $libln" -e 'd' -e '}' -i $ubin
     rm -f ../../mipay-$model-$ver.zip $libmd $libln system/build.prop
-    $sevenzip a -tzip ../../mipay-$model-$ver.zip . >/dev/null
+    $sevenzip a -tzip -x!system/priv-app ../../mipay-$model-$ver.zip . >/dev/null
+
+    if ! [ -z "$EXTRA_PRIV" ]; then
+        cp "$tool_dir/update-binary-cleaner" $ubin
+        $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
+        $sed -i 's/^force_encrypt_oreo$/# force_encrypt_oreo/' $ubin
+        rm -f ../../eufix-$model-$ver.zip system/build.prop
+        $sevenzip a -tzip -x!system/app ../../eufix2-$model-$ver.zip . >/dev/null
+    fi
+
     trap - INT
     popd
     echo "--> done"
@@ -271,7 +328,7 @@ for f in *.zip; do
     fi
     model=${arr[1]}
     ver=${arr[2]}
-    extract $model $ver $f "$mipay_apps"
+    extract $model $ver $f "$mipay_apps" "$private_apps"
     hasfile=true
 done
 
