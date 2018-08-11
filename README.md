@@ -31,7 +31,9 @@ The previous script `extract.sh` will also create a `eufix2` flashable zip file 
 
 ### Optional Encryption
 
-Xiaomi.eu roms **remove encryption** by default (check in "Settings-Privacy-Encryption"). It is recommended to enable encryption if you plan to use Mi Pay. If your device cannot be encrypted normally in Settings, you can completely **format `/data/` partition** and flash the zip file `miuieu-force-fbe-oreo.zip` after flashing xiaomi.eu ROM.
+It is recommended to enable encryption if you plan to use Mi Pay. Official MIUI roms (China or International) has encryption enabled by default. But xiaomi.eu roms **remove encryption** by default (check in "Settings-Privacy-Encryption"). Some early versions of EU roms have bootloop bugs when enabling encryption in Settings (**Backup before trying!**).
+
+If your device cannot be encrypted normally in Settings, you can completely **format `/data/` partition** and flash the zip file `miuieu-force-fbe-oreo.zip` after flashing xiaomi.eu ROM.
 
 **Warning**: Formatting `/data` will destroy **EVERYTHING**, including all your personal data and external storage (`/sdcard`). Remember to backup before formatting. Once your `/data` partition is encrypted, it will be kept encrypted through system updates.
 
