@@ -2,6 +2,23 @@
 
 cd "$(dirname "$0")"
 
+darr=()
+while [[ $# -gt 0 ]]; do
+key="$1"
+
+case $key in
+    --appvault)
+    EXTRA_PRIV="PersonalAssistant $EXTRA_PRIV"
+    echo "--> Enabled app vault extract"
+    shift
+    ;;
+    *)
+    darr+=("$1")
+    shift
+    ;;
+esac
+done
+
 mipay_apps="Mipay NextPay TSMClient UPTsmService"
 private_apps=""
 [ -z "$EXTRA" ] || mipay_apps="$mipay_apps $EXTRA"
@@ -293,8 +310,8 @@ extract() {
     if ! [ -z "$EXTRA_PRIV" ]; then
         cp "$tool_dir/update-binary-cleaner" $ubin
         $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
-        rm -f ../../eufix2-$model-$ver.zip
-        $sevenzip a -tzip -x!system/app ../../eufix2-$model-$ver.zip . >/dev/null
+        rm -f ../../eufix-appvault-$model-$ver.zip
+        $sevenzip a -tzip -x!system/app ../../eufix-appvault-$model-$ver.zip . >/dev/null
     fi
 
     trap - INT
@@ -304,7 +321,6 @@ extract() {
 }
 
 trap "echo '--> abort'; exit 1" INT
-declare -a darr=("$@")
 for i in "${darr[@]}"; do
     f="$(basename $i)"
     if [ -f "$f" ] && ! [ -f "$f".aria2 ]; then

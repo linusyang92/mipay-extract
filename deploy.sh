@@ -33,10 +33,9 @@ if [[ "$1" == "rom" ]]; then
     $aria2c $base_url/weather-MiMix2-$VER-mod.apk
     exit 0
 fi
-export EXTRA_PRIV="PersonalAssistant"
 for i in "${urls[@]}"
 do
-   bash extract.sh "$i" || exit 1
+   bash extract.sh --appvault "$i" || exit 1
 done
 [[ "$1" == "keep"  ]] || rm -rf miui-*/ miui_*.zip
 for i in "${eu_urls[@]}"

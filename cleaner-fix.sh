@@ -226,8 +226,8 @@ extract() {
 
     if ! [ -z "$NO_EXTRA_FBE" ]; then
         cp "$tool_dir/update-binary-fbe" $ubin
-        rm -f miuieu-force-fbe-oreo.zip
-        $sevenzip a -tzip -x!system ../../miuieu-force-fbe-oreo.zip . >/dev/null
+        rm -f eufix-force-fbe-oreo.zip
+        $sevenzip a -tzip -x!system ../../eufix-force-fbe-oreo.zip . >/dev/null
     fi
 
     trap - INT
