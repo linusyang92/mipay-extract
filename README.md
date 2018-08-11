@@ -33,7 +33,11 @@ It is recommended to enable encryption if you plan to use Mi Pay. Official MIUI 
 
 If your device cannot be encrypted normally in Settings, you can completely **format `/data/` partition** and flash the additional zip file `eufix-force-fbe-oreo.zip` after flashing xiaomi.eu ROM.
 
-**Warning**: Formatting `/data` will destroy **EVERYTHING**, including all your personal data and external storage (`/sdcard`). Remember to backup before formatting. Once your `/data` partition is encrypted, it will be kept encrypted through system updates.
+**Warning**: 
+
+* Do not try to flash `eufix-force-fbe-oreo.zip` when your device is **decrypted**. It will cause bootloop. Only flash it when your device has a freshly formatted `/data` partition, or already encrypted.
+* Formatting `/data` will destroy **EVERYTHING**, including all your personal data and external storage (`/sdcard`). Remember to backup before formatting.
+* Once your `/data` partition is encrypted, it will be kept encrypted. But when you flash a new EU rom, the force encryption will be removed. You need to flash this file every time you flash a new EU rom.
 
 ## Credits
 
