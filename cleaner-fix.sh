@@ -224,7 +224,7 @@ extract() {
     rm -f ../../eufix-$model-$ver.zip system/build.prop
     $sevenzip a -tzip ../../eufix-$model-$ver.zip . >/dev/null
 
-    if ! [ -z "$NO_EXTRA_FBE" ]; then
+    if [ -z "$NO_EXTRA_FBE" ]; then
         cp "$tool_dir/update-binary-fbe" $ubin
         rm -f eufix-force-fbe-oreo.zip
         $sevenzip a -tzip -x!system ../../eufix-force-fbe-oreo.zip . >/dev/null
