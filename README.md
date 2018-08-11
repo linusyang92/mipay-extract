@@ -3,6 +3,8 @@ Extract Mi Pay from MIUI China Rom
 
 [![Build Status](https://travis-ci.org/linusyang92/mipay-extract.svg)](https://travis-ci.org/linusyang92/mipay-extract)
 
+**Use at your own risk!**
+
 ## Usage
 Put MIUI 9 China Rom (OTA zip package) in the directory and double-click `extract.bat` (Windows) or run `./extract.sh` (macOS and Linux) to generate the flashable zip.
 
@@ -16,17 +18,22 @@ Automatic builds for selected devices are available in [releases](https://github
 
 ## Xiaomi.eu Rom Patches
 
-*Important Notes:* You must have an **encrypted** or **newly formatted** data partition to use these patches. Do not flash `eufix*.zip` if your data partition is decrypted. Otherwise, your device will get bricked!
-
 For xiaomi.eu rom users in China, you can also download the xiaomi.eu rom and run `cleaner-fix.sh` for creating a flashable zip with prefix `eufix`. It contains patches to
 
-1. Show Lunar dates in Calendar app.
-2. Fix FC of cleaner app.
-3. Show payment monitor options in setting page of Security app.
-4. Use Chinese weather sources in Weather app.
-5. Force file-based encryption of `/data` partition for Oreo-based roms.
+* Show Lunar dates in Calendar app.
+* Fix FC of cleaner app.
+* Show payment monitor options in setting page of Security app.
+* Use Chinese weather sources in Weather app.
 
-**Use at your own risk!** Backup your data before flashing `eufix` package. Xiaomi.eu roms remove encryption by default. Re-enabling encryption may cause loss of your data.
+The previous script `extract.sh` will also create a `eufix2` flashable zip file from the original MIUI rom, which contains an extra fix to
+
+* Recover Chinese functions (e.g. WeChat, Alipay, etc.) in App Vault, i.e. the leftmost page on home screen with shortcuts
+
+### Optional Encryption
+
+Xiaomi.eu roms **remove encryption** by default (check in "Settings-Privacy-Encryption"). It is recommended to enable encryption if you plan to use Mi Pay. If your device cannot be encrypted normally in Settings, you can completely **format `/data/` partition** and flash the zip file `miuieu-force-fbe-oreo.zip` after flashing xiaomi.eu ROM.
+
+**Warning**: Formatting `/data` will destroy **EVERYTHING**, including all your personal data and external storage (`/sdcard`). Remember to backup before formatting. Once your `/data` partition is encrypted, it will be kept encrypted through system updates.
 
 ## Credits
 
