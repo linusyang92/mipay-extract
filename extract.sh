@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="Mipay TSMClient UPTsmService"
+mipay_apps="Mipay NextPay TSMClient UPTsmService"
 private_apps=""
 [ -z "$EXTRA" ] || mipay_apps="$mipay_apps $EXTRA"
 [ -z "$EXTRA_PRIV" ] || private_apps="$private_apps $EXTRA_PRIV"
@@ -293,8 +293,7 @@ extract() {
     if ! [ -z "$EXTRA_PRIV" ]; then
         cp "$tool_dir/update-binary-cleaner" $ubin
         $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
-        $sed -i 's/^force_encrypt_oreo$/# force_encrypt_oreo/' $ubin
-        rm -f ../../eufix-$model-$ver.zip system/build.prop
+        rm -f ../../eufix2-$model-$ver.zip
         $sevenzip a -tzip -x!system/app ../../eufix2-$model-$ver.zip . >/dev/null
     fi
 

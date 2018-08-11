@@ -1,7 +1,6 @@
 #!/sbin/sh
 
-ver=
-tmp=/tmp/cleaner-fix-apps
+tmp=/tmp/eufix-force-fbe
 
 if [ "$3" ]; then
     zip=$3
@@ -37,36 +36,41 @@ cleanup() {
     [ -d "$tmp" ] && rm -rf "$tmp"
 }
 
-extract() {
-    rm -rf "$2"
-    mkdir -p "$2"
-    unzip -o "$1" -d "$2" || abort "Failed to extract zip to $2!"
-}
-
 setperm() {
     find "$3" -type d -exec chmod "$1" {} \;
     find "$3" -type f -exec chmod "$2" {} \;
 }
 
-rmcache() {
-    f="$1"
-    [ -d /data/dalvik-cache/ ] || return 0
-    app="$(echo $f | tr / @ | cut -c2-)"
-    [ -z "$app" ] && return 0
-    app="${app}@"
-    find /data/dalvik-cache/ -iname "${app}*" |
-        while read i; do
-            j="$(basename $i)"
-            print "Clean cache: ${j/${app}/}"
-            rm -f "$i"
-        done
+try_del() {
+    app=/system/$1
+    if [ -d $app ]; then
+        print "Removing ${app}..."
+        rm -r "$app" || print "failed to remove $app"
+    else
+        print "Skipping ${app}"
+    fi
+}
+
+force_encrypt_oreo() {
+    fstab=/system/vendor/etc/fstab.qcom
+    if ! [ -f "$fstab" ]; then
+        print "No fstab.qcom in vendor, skipping..."
+    else
+        sed -i "
+            s/\b\(encryptable\)=/fileencryption=/g
+        " "$fstab"
+        if ! grep -q '=ice,quota' "$fstab"; then
+            sed -i "s/=ice/=ice,quota/g" "$fstab"
+        fi
+        echo "Enabled force encryption for /data"
+    fi
 }
 
 print "*******************************"
 print "* MIUI 9/10 xiaomi.eu Rom Fix *"
+print "* Force Encryption Workaround *"
 print "*******************************"
 print "by @linusyang"
-print "version: $ver"
 
 print "Mounting filesystems..."
 mount /system
@@ -75,28 +79,11 @@ if mount | grep ro | grep -q /system; then
     print 'Remount as read-write...'
 fi
 
-[ "$zip" ] && {
-    extract "$zip" "$tmp"
-}
-cd "$tmp"
+# print "Removing evil apps..."
+# try_del app/MiuiDaemon
 
-app_list=""
-for f in ./system/priv-app/*; do
-    app_list="${app_list} /system/priv-app/$(basename $f)"
-done
-
-print "Clean files..."
-rm -rf $app_list
-
-print "Adding files..."
-cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy apps"
-
-print "Setting correct permissions..."
-for f in $app_list; do
-    print "Fixing permission: $f"
-    setperm 0755 0644 $f
-    rmcache $f
-done
+print "Enabling force encryption for Oreo..."
+force_encrypt_oreo
 
 umount /system
 cleanup
