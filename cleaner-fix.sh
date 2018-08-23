@@ -132,7 +132,13 @@ deodex() {
             fi
         apkfile=$deoappdir/$app/$app.apk
         $sevenzip d "$apkfile" $dexclass >/dev/null
-        $aapt add -fk $apkfile $deoappdir/$app/classes.dex || return 1
+        pushd $deoappdir/$app
+        adderror=false
+        $aapt add -fk $app.apk classes.dex || adderror=true
+        popd
+        if $adderror; then
+            return 1
+        fi
         rm -f $deoappdir/$app/classes.dex
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
