@@ -69,7 +69,7 @@ else
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
     exists 7z && sevenzip="7z" || sevenzip="$tool_dir/7za"
     exists aria2c || aria2c="$tool_dir/aria2c $aria2c_opts"
-    exists brotli || brotli="$tool_dir/brotli"
+    exists brotli && brotli="brotli" || brotli="$tool_dir/brotli"
     exists vdexExtractor || vdex="$tool_dir/vdexExtractor"
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
