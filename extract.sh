@@ -36,6 +36,7 @@ aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c
 aria2c="aria2c $aria2c_opts"
 sed="sed"
 vdex="vdexExtractor"
+cdex="$tool_dir/cdex/compact_dex_converter_linux"
 patchmethod="python2.7 $tool_dir/patchmethod.py"
 
 exists() {
@@ -64,6 +65,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     vdex="$tool_dir/darwin/vdexExtractor"
     aria2c="$tool_dir/darwin/aria2c $aria2c_opts"
     sed="$tool_dir/darwin/gsed"
+    cdex="$tool_dir/cdex/compact_dex_converter_mac"
 else
     exists aapt && aapt="aapt" || aapt="$tool_dir/aapt"
     exists zipalign && zipalign="zipalign" || zipalign="$tool_dir/zipalign"
@@ -76,6 +78,7 @@ else
         patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
+        cdex=""
     fi
 fi
 
@@ -123,7 +126,7 @@ deodex() {
             classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
             echo "----> classes: $classes"
         fi
-        echo "$classes" | while read line; do
+        while read line; do
             apkdex=$(basename $(echo "$line"))
             if [[ $(echo "$apkdex" | grep classes) = "" ]]; then
                 dexclass="classes.dex"
@@ -131,11 +134,25 @@ deodex() {
                 dexclass=$(echo "$apkdex" | cut -d":" -f2-)
             fi
             if $hasvdex; then
-                $vdex -i $deoappdir/$app/$deoarch/$app.vdex -o $deoappdir/$app/$deoarch || return 1
-                for f in $deoappdir/$app/$deoarch/$app.apk_*; do
-                    mv $f ${f/$app.apk_/} || return 1
-                    echo "----> classes: $(basename $f)"
+                pushd $deoappdir/$app/$deoarch
+                $vdex -i $app.vdex || return 1
+                for f in ${app}_*; do
+                    dexfile="${f/${app}_/}"
+                    mv $f $dexfile || return 1
+                    if [[ "$dexfile" == *.cdex ]]; then
+                        if ! [ -f "$cdex" ]; then
+                            echo "--> error: cdex not supported"
+                            popd
+                            return 1
+                        fi
+                        echo -ne "----> "
+                        "$cdex" "$dexfile" || return 1
+                        mv "$dexfile".new "${dexfile/cdex/dex}" || return 1
+                        dexfile="${dexfile/cdex/dex}"
+                    fi
+                    echo "----> classes: ${dexfile}"
                 done
+                popd
             else
                 $baksmali deodex -b $framedir/$arch/boot.oat $deoappdir/$app/$deoarch/$app.odex/$apkdex -o $deoappdir/$app/$deoarch/smali || return 1
                 $smali assemble -a $api $deoappdir/$app/$deoarch/smali -o $deoappdir/$app/$deoarch/$dexclass || return 1
@@ -145,7 +162,7 @@ deodex() {
                     continue
                 fi
             fi
-        done
+        done <<< "$classes"
         pushd $deoappdir/$app/$deoarch
         adderror=false
         $aapt add -fk ../../$app.apk classes*.dex || adderror=true
