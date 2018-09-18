@@ -48,6 +48,8 @@ If your device cannot be encrypted normally in Settings, you can completely **fo
 * vdexExtractor
 * Google Android SDK
 * p7zip
+* [flinux](https://github.com/wishstudio/flinux)
+* [Apk-Changer](https://github.com/Furniel/Apk-Changer/tree/b3680c496169278079d7b23814d3c448f9853f81/other/cdexconv/linux)
 
 ## Disclaimer
 This repository is provided with no warranty. Make sure you have legal access to MIUI Roms if using this repository. If any files of this repository violate your copyright, please contact me to remove them.

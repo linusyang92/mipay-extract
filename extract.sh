@@ -78,7 +78,8 @@ else
         patchmethod="python2.7 ../../tools/patchmethod.py"
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
-        cdex=""
+        cdex_top="../../../../../../../tools/cdex"
+        cdex="./flinux.exe compact_dex_converter_linux_32"
     fi
 fi
 
@@ -140,15 +141,36 @@ deodex() {
                     dexfile="${f/${app}_/}"
                     mv $f $dexfile || return 1
                     if [[ "$dexfile" == *.cdex ]]; then
-                        if ! [ -f "$cdex" ]; then
+                        if [ -z "$cdex" ]; then
                             echo "--> error: cdex not supported"
                             popd
                             return 1
                         fi
+                        cdex_bin_copy=false
+                        if ! [ -z "$cdex_top" ]; then
+                            cdex_bin_copy=true
+                            if ! [ -d "$cdex_top" ]; then
+                                echo "--> error: path error $cdex_top"
+                                return 1
+                            fi
+                            for cdex_bin in $cdex; do
+                                if ! cp "$cdex_top/$cdex_bin" .; then
+                                    echo "--> error: failed to copy $cdex_bin"
+                                    return 1
+                                else
+                                    echo "----> prepare $cdex_bin"
+                                fi
+                            done
+                        fi
                         echo -ne "----> "
-                        "$cdex" "$dexfile" || return 1
+                        $cdex "$dexfile" || return 1
                         mv "$dexfile".new "${dexfile/cdex/dex}" || return 1
                         dexfile="${dexfile/cdex/dex}"
+                        if $cdex_bin_copy; then
+                            for cdex_bin in $cdex; do
+                                rm -f "$cdex_bin"
+                            done
+                        fi
                     fi
                     echo "----> classes: ${dexfile}"
                 done
