@@ -124,7 +124,7 @@ deodex() {
         if $hasvdex; then
             classes="classes.dex"
         else
-            classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null)
+            classes=$($baksmali list dex $deoappdir/$app/$deoarch/$app.odex 2>/dev/null | tr -d '\015' | sort -V)
             echo "----> classes: $classes"
         fi
         while read line; do
@@ -208,9 +208,15 @@ deodex() {
         rm -r "$path/lib/$soarch"
 
         echo "----> decompiling $app..."
-        dexclass="classes.dex"
-        $baksmali disassemble --debug-info false --output $deoappdir/$app/smali $apkfile || return 1
+        classes=$($baksmali list dex $apkfile 2>/dev/null | tr -d '\015' | sort -V)
 
+        while read dexclass; do
+        paths="$($baksmali list classes $apkfile/$dexclass 2>/dev/null)"
+        echo "-----> testing $dexclass"
+        [[ "$paths" == *"com/miui/home/launcher/assistant/ui"* ]] || continue
+        [[ "$paths" == *"com/miui/personalassistant"* ]] || continue
+        echo "-----> found $dexclass"
+        $baksmali disassemble --debug-info false --output $deoappdir/$app/smali $apkfile/$dexclass || return 1
         $patchmethod $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/AssistHolderController.smali \
                      -needUpgradeApk || return 1
         $patchmethod $deoappdir/$app/smali/com/miui/personalassistant/favorite/sync/MiuiFavoriteReceiver.smali \
@@ -224,11 +230,14 @@ deodex() {
 
         $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
         rm -rf $deoappdir/$app/smali
-        if [[ ! -f $deoappdir/$app/$dexclass ]]; then
+        if ! [ -f "$deoappdir/$app/$dexclass" ]; then
             echo "----> failed to patch: $deoappdir/$app/$dexclass"
             return 1
         fi
         $sevenzip d "$apkfile" $dexclass >/dev/null
+        break
+        done <<< "$classes"
+
         pushd $deoappdir/$app
         adderror=false
         $aapt add -fk $app.apk classes*.dex || adderror=true
@@ -236,7 +245,7 @@ deodex() {
         if $adderror; then
             return 1
         fi
-        rm -f $deoappdir/$app/classes.dex
+        rm -f $deoappdir/$app/classes*.dex
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
     elif [ -d "$deoappdir/$app/lib/$arch" ]; then
