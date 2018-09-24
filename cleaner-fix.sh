@@ -9,8 +9,8 @@ tool_dir=$base_dir/tools
 sdat2img="python2.7 $tool_dir/sdat2img.py"
 patchmethod="python2.7 $tool_dir/patchmethod.py"
 heapsize=1024
-smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
-baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
+smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.5.jar"
+baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.5.jar"
 keypass="--ks-pass pass:testkey --key-pass pass:testkey"
 sign="java -Xmx${heapsize}m -jar $tool_dir/apksigner.jar sign \
       --ks $tool_dir/testkey.jks $keypass"
@@ -50,8 +50,8 @@ else
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         patchmethod="python2.7 ../../tools/patchmethod.py"
-        smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
-        baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
+        smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.5.jar"
+        baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.5.jar"
         sign="java -Xmx${heapsize}m -jar ../../tools/apksigner.jar sign \
               --ks ../../tools/testkey.jks $keypass"
     fi

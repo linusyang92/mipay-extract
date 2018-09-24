@@ -28,8 +28,8 @@ base_dir=$PWD
 tool_dir=$base_dir/tools
 sdat2img="python2.7 $tool_dir/sdat2img.py"
 heapsize=1024
-smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.1.jar"
-baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.1.jar"
+smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.5.jar"
+baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.5.jar"
 libmd="libmd.txt"
 libln="libln.txt"
 aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
@@ -76,8 +76,8 @@ else
     if [[ "$OSTYPE" == "cygwin"* ]]; then
         sdat2img="python2.7 ../tools/sdat2img.py"
         patchmethod="python2.7 ../../tools/patchmethod.py"
-        smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.1.jar"
-        baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.1.jar"
+        smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.5.jar"
+        baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.5.jar"
         cdex_top="../../../../../../../tools/cdex"
         cdex="./flinux.exe compact_dex_converter_linux_32"
     fi
