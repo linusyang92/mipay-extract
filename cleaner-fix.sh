@@ -98,15 +98,34 @@ deodex() {
             fi
 
             if [[ "$app" == "Weather" ]]; then
-                find $deoappdir/$app/smali -type f -iname "*.smali" | while read i; do
-                    if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
-                        $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
-                          || return 1
-                        if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
-                            echo "----> ! failed to patch: $(basename $i)"
-                        else
-                            echo "----> patched smali: $(basename $i)"
+                echo "----> searching smali..."
+                pattern="Lmiui/os/Build;->IS_INTERNATIONAL_BUILD"
+                findroot="$deoappdir/$app/smali/com/miui/weather2"
+                found=()
+                if [[ "$OSTYPE" == "cygwin"* ]]; then
+                    pushd "$findroot"
+                    cmdret="$(findstr /sm /c:${pattern} '*.*' | tr -d '\015')"
+                    popd
+                    result="${cmdret//\\//}"
+                    while read i; do
+                        found+=("${findroot}/$i")
+                        echo "${findroot}/$i"
+                    done <<< "$result"
+                else
+                    files="$(find $findroot -type f -iname "*.smali")"
+                    while read i; do
+                        if grep -q -F "$pattern" $i; then
+                            found+=("$i")
                         fi
+                    done <<< "$files"
+                fi
+                for i in "${found[@]}"; do
+                    $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
+                      || return 1
+                    if grep -q -F "$pattern" $i; then
+                        echo "----> ! failed to patch: $(basename $i)"
+                    else
+                        echo "----> patched smali: $(basename $i)"
                     fi
                 done
                 i="$deoappdir/$app/smali/com/miui/weather2/tools/ToolUtils.smali"
@@ -120,7 +139,7 @@ deodex() {
                 $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
                   || return 1
 
-                if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
+                if grep -q -F 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
                     echo "----> ! failed to patch: $(basename $i)"
                 else
                     echo "----> patched smali: $(basename $i)"

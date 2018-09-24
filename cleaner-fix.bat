@@ -4,5 +4,5 @@ if not exist tools\win32\ (
     tools\win32-tools.exe -otools -y
     call tools\win32-addons\add.bat
 )
-tools\win32\bin\bash.exe -c 'PATH=$PWD/tools/win32/bin bash cleaner-fix.sh %*'
+tools\win32\bin\bash.exe -c 'PATH=$PWD/tools/win32/bin:$PATH bash cleaner-fix.sh %*'
 pause
