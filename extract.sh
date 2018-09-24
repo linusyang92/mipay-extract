@@ -225,7 +225,7 @@ deodex() {
             $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/AssistHolderController'$1'.smali || return 1
         $sed -i '\|Lcom/miui/home/launcher/assistant/ui/view/AssistHolderView;->initAi()V|d' \
             $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/view/AssistHolderView.smali || return 1
-        $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_GLOBAL_BUILD:Z|const/4 v\1, 0x0|g' \
+        $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_GLOBAL_BUILD:Z|const/4 \1\2, 0x0|g' \
             $deoappdir/$app/smali/com/miui/personalassistant/provider/PersonalAssistantProvider.smali || return 1
 
         $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1

@@ -100,7 +100,7 @@ deodex() {
             if [[ "$app" == "Weather" ]]; then
                 find $deoappdir/$app/smali -type f -iname "*.smali" | while read i; do
                     if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
-                        $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 v\1, 0x0|g' "$i" \
+                        $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
                           || return 1
                         if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
                             echo "----> ! failed to patch: $(basename $i)"
@@ -117,8 +117,9 @@ deodex() {
 
             if [[ "$app" == "SecurityCenter" ]]; then
                 i="$deoappdir/$app/smali/com/miui/antivirus/activity/SettingsActivity.smali"
-                $sed -i 's|sget-boolean v\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 v\1, 0x0|g' "$i" \
+                $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
                   || return 1
+
                 if grep -q 'Lmiui/os/Build;->IS_INTERNATIONAL_BUILD' $i; then
                     echo "----> ! failed to patch: $(basename $i)"
                 else
