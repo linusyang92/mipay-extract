@@ -109,7 +109,6 @@ deodex() {
                     result="${cmdret//\\//}"
                     while read i; do
                         found+=("${findroot}/$i")
-                        echo "${findroot}/$i"
                     done <<< "$result"
                 else
                     files="$(find $findroot -type f -iname "*.smali")"
