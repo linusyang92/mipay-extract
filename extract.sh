@@ -79,7 +79,7 @@ else
         smali="java -Xmx${heapsize}m -jar ../../tools/smali-2.2.5.jar"
         baksmali="java -Xmx${heapsize}m -jar ../../tools/baksmali-2.2.5.jar"
         cdex_top="../../../../../../../tools/cdex"
-        cdex="./flinux.exe compact_dex_converter_linux_32"
+        cdex="./flinux.exe compact_dex_converter_linux"
     fi
 fi
 
