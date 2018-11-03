@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
+	gover "github.com/mcuadros/go-version"
 	"github.com/mmcdole/gofeed"
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
@@ -182,14 +183,14 @@ func getNewDeploy(currentVer, currentDeploy string,
 	version = currentVer
 	deploy = []byte(currentDeploy)
 	err = nil
-	if miuiVer > currentVer || force {
+	if gover.Compare(miuiVer, currentVer, ">") || force {
 		version = miuiVer
 		euVer, euUrl = getEu(miuiVer)
 		if euVer == miuiVer || force {
 			deploy = newDeployFile(miuiVer, miuiUrl, euUrl, currentDeploy)
 		}
 	}
-	if miuiVer <= currentVer {
+	if gover.Compare(miuiVer, currentVer, "<=") {
 		err = errors.New(fmt.Sprintf("MIUI China (current: %s)", miuiVer))
 	} else if euVer != miuiVer {
 		err = errors.New(fmt.Sprintf("xiaomi.eu (current: %s)", euVer))
