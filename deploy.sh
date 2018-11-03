@@ -30,7 +30,7 @@ if [[ "$1" == "rom" ]]; then
     base_url="https://github.com/linusyang92/mipay-extract/releases/download/$VER"
     $aria2c $base_url/eufix-MiMix2-$VER.zip
     $aria2c $base_url/mipay-MIMIX2-$VER.zip
-    $aria2c $base_url/weather-MiMix2-$VER-mod.apk
+    $aria2c $base_url/eufix-appvault-MIMIX2-$VER.zip
     exit 0
 fi
 for i in "${urls[@]}"
