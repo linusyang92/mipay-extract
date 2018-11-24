@@ -8,7 +8,7 @@ key="$1"
 
 case $key in
     --appvault)
-    EXTRA_PRIV="PersonalAssistant $EXTRA_PRIV"
+    EXTRA_PRIV="priv-app/PersonalAssistant app/MetokNLP $EXTRA_PRIV"
     echo "--> Enabled app vault extract"
     shift
     ;;
@@ -32,6 +32,7 @@ smali="java -Xmx${heapsize}m -jar $tool_dir/smali-2.2.5.jar"
 baksmali="java -Xmx${heapsize}m -jar $tool_dir/baksmali-2.2.5.jar"
 libmd="libmd.txt"
 libln="libln.txt"
+privapp="privapp.txt"
 aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
@@ -201,11 +202,11 @@ deodex() {
         echo "----> extract native library..."
         apkfile=$deoappdir/$app/$app.apk
         path=$deoappdir/$app
-        arch=arm
-        soarch="armeabi"
-        $sevenzip x -o"$path" "$apkfile" "lib/$soarch" >/dev/null || return 1
-        mv "$path/lib/$soarch/"* "$path/lib/$arch/"
-        rm -r "$path/lib/$soarch"
+        pa_arch=arm
+        pa_soarch="armeabi"
+        $sevenzip x -o"$path" "$apkfile" "lib/$pa_soarch" >/dev/null || return 1
+        mv "$path/lib/$pa_soarch/"* "$path/lib/$pa_arch/"
+        rm -r "$path/lib/$pa_soarch"
 
         echo "----> decompiling $app..."
         classes=$($baksmali list dex $apkfile 2>/dev/null | tr -d '\015' | sort -V)
@@ -270,7 +271,7 @@ deodex() {
         done
         [ -z "$(ls -A $deoappdir/$app/lib/$arch)" ] && rm -rf "$deoappdir/$app/lib"
     else
-        if [[ "$app" == "UPTsmService" ]]; then
+        if [[ "$app" == "UPTsmService" ]] || [[ "$app" == "MetokNLP" ]]; then
             echo "----> extract native library..."
             apkfile=$deoappdir/$app/$app.apk
             path=$deoappdir/$app
@@ -294,6 +295,7 @@ extract() {
     priv_apps=$5
     dir=miui-$model-$ver
     img=$dir-system.img
+    has_priv_apps=false
 
     echo "--> rom: $model v$ver"
     [ -d $dir ] || mkdir $dir
@@ -331,9 +333,13 @@ extract() {
         echo "----> copying $f..."
         $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
     done
+    echo "system/priv-app" > "$work_dir"/$privapp
+    echo "$privapp" >> "$work_dir"/$privapp
     for f in $priv_apps; do
         echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
+        has_priv_apps=true
+        echo "system/$f" >> "$work_dir"/$privapp
+        $sevenzip x -odeodex/system/ "$img" $f >/dev/null || clean "$work_dir"
     done
     archs="arm64 x86_64 arm x86"
     arch="arm64"
@@ -352,7 +358,7 @@ extract() {
         deodex "$work_dir" "$f" "$arch" "$PWD/$img" app || clean "$work_dir"
     done
     for f in $priv_apps; do
-        deodex "$work_dir" "$f" "$arch" "$PWD/$img" priv-app || clean "$work_dir"
+        deodex "$work_dir" "$(basename $f)" "$arch" "$PWD/$img" "$(dirname $f)" || clean "$work_dir"
     done
 
     echo "--> packaging flashable zip"
@@ -365,13 +371,25 @@ extract() {
     $sed -e '/#mkdir_symlink/ {' -e "r $libmd" -e 'd' -e '}' -i $ubin
     $sed -e '/#do_symlink/ {' -e "r $libln" -e 'd' -e '}' -i $ubin
     rm -f ../../mipay-$model-$ver.zip $libmd $libln system/build.prop
-    $sevenzip a -tzip -x!system/priv-app ../../mipay-$model-$ver.zip . >/dev/null
+    $sevenzip a -tzip -x@"$privapp" ../../mipay-$model-$ver.zip . >/dev/null
 
-    if ! [ -z "$EXTRA_PRIV" ]; then
+    if $has_priv_apps; then
         cp "$tool_dir/update-binary-cleaner" $ubin
+        cat << EOF > "$privapp"
+print "Patching dns and izat.conf..."
+rmprop net.dns1 /system/build.prop
+rmprop net.dns2 /system/build.prop
+rmprop OSNLP_PACKAGE /system/vendor/etc/izat.conf
+rmprop OSNLP_ACTION /system/vendor/etc/izat.conf
+EOF
         $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
-        rm -f ../../eufix-appvault-$model-$ver.zip
-        $sevenzip a -tzip -x!system/app ../../eufix-appvault-$model-$ver.zip . >/dev/null
+        $sed -e '/#extra_patches/ {' -e "r $privapp" -e 'd' -e '}' -i $ubin
+        rm -f ../../eufix-appvault-$model-$ver.zip $privapp
+        file_list=""
+        for f in $priv_apps; do
+            file_list="$file_list system/$f"
+        done
+        $sevenzip a -tzip ../../eufix-appvault-$model-$ver.zip META-INF $file_list >/dev/null
     fi
 
     trap - INT
