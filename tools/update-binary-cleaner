@@ -62,6 +62,14 @@ rmcache() {
         done
 }
 
+rmprop() {
+    if grep -q "^[[:space:]]*$1[[:space:]]*=" "$2"; then
+        sed -i "s/^[[:space:]]*$1[[:space:]]*=/#$1=/" "$2" && \
+            print "Comment out property: $1" || \
+            print "Failed to modify property: $1"
+    fi
+}
+
 print "*******************************"
 print "* MIUI 9/10 xiaomi.eu Rom Fix *"
 print "*******************************"
@@ -84,12 +92,20 @@ app_list=""
 for f in ./system/priv-app/*; do
     app_list="${app_list} /system/priv-app/$(basename $f)"
 done
+if [ -d ./system/app ]; then
+    for f in ./system/app/*; do
+        app_list="${app_list} /system/app/$(basename $f)"
+    done
+fi
 
 print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
-cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy apps"
+cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy priv-apps"
+if [ -d ./system/app ]; then
+    cp -R ./system/app/* /system/app/ || abort "Failed to copy apps"
+fi
 
 print "Setting correct permissions..."
 for f in $app_list; do
@@ -97,6 +113,8 @@ for f in $app_list; do
     setperm 0755 0644 $f
     rmcache $f
 done
+
+#extra_patches
 
 umount /system
 cleanup
