@@ -2,7 +2,30 @@
 
 cd "$(dirname "$0")"
 
-mipay_apps="CleanMaster Calendar SecurityCenter"
+darr=()
+while [[ $# -gt 0 ]]; do
+key="$1"
+
+case $key in
+    --trafficfix)
+    EXTRA_PRIV="framework/services.jar $EXTRA_PRIV"
+    echo "--> Increase threshold (10M) to prevent high cpu of traffic monitoring"
+    shift
+    ;;
+    --nofbe)
+    NO_EXTRA_FBE="yes"
+    shift
+    ;;
+    *)
+    darr+=("$1")
+    shift
+    ;;
+esac
+done
+
+mipay_apps="Calendar SecurityCenter"
+private_apps=""
+[ -z "$EXTRA_PRIV" ] || private_apps="$private_apps $EXTRA_PRIV"
 
 base_dir=$PWD
 tool_dir=$base_dir/tools
@@ -86,13 +109,19 @@ deodex() {
     if [ -z "$api" ]; then
         api=25
     fi
-    file_list="$($sevenzip l "$deoappdir/$app/$app.apk")"
+    apkdir=$deoappdir/$app
+    apkfile=$apkdir/$app.apk
+    if [[ "$app" == *".jar" ]]; then
+        apkdir=$deoappdir
+        apkfile=$apkdir/$app
+    fi
+    file_list="$($sevenzip l "$apkfile")"
     if [[ "$file_list" == *"classes.dex"* ]]; then
         echo "--> decompiling $app..."
             dexclass="classes.dex"
-            $baksmali d $deoappdir/$app/$app.apk -o $deoappdir/$app/smali || return 1
+            $baksmali d $apkfile -o $apkdir/smali || return 1
             if [[ "$app" == "Calendar" ]]; then
-                $patchmethod $deoappdir/$app/smali/com/miui/calendar/util/LocalizationUtils.smali \
+                $patchmethod $apkdir/smali/com/miui/calendar/util/LocalizationUtils.smali \
                              showsDayDiff showsLunarDate showsWidgetHoliday -showsWorkFreeDay \
                              -isMainlandChina -isGreaterChina || return 1
             fi
@@ -100,7 +129,7 @@ deodex() {
             if [[ "$app" == "Weather" ]]; then
                 echo "----> searching smali..."
                 pattern="Lmiui/os/Build;->IS_INTERNATIONAL_BUILD"
-                findroot="$deoappdir/$app/smali/com/miui/weather2"
+                findroot="$apkdir/smali/com/miui/weather2"
                 found=()
                 if [[ "$OSTYPE" == "cygwin"* ]]; then
                     pushd "$findroot"
@@ -127,14 +156,14 @@ deodex() {
                         echo "----> patched smali: $(basename $i)"
                     fi
                 done
-                i="$deoappdir/$app/smali/com/miui/weather2/tools/ToolUtils.smali"
+                i="$apkdir/smali/com/miui/weather2/tools/ToolUtils.smali"
                 if [ -f "$i" ]; then
                     $patchmethod "$i" -canRequestCommercial -canRequestCommercialInfo || return 1
                 fi
             fi
 
             if [[ "$app" == "SecurityCenter" ]]; then
-                i="$deoappdir/$app/smali/com/miui/antivirus/activity/SettingsActivity.smali"
+                i="$apkdir/smali/com/miui/antivirus/activity/SettingsActivity.smali"
                 $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1\2, 0x0|g' "$i" \
                   || return 1
 
@@ -145,22 +174,31 @@ deodex() {
                 fi
             fi
 
-            $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
-            rm -rf $deoappdir/$app/smali
-            if [[ ! -f $deoappdir/$app/$dexclass ]]; then
-                echo "----> failed to baksmali: $deoappdir/$app/$dexclass"
+            if [[ "$app" == "services.jar" ]]; then
+                i="$apkdir/smali/com/android/server/net/NetworkStatsService.smali"
+                $sed -i 's|, 0x200000$|, 0x1000000|g' "$i" || return 1
+                if grep -q -F ', 0x200000' $i; then
+                    echo "----> ! failed to patch: $(basename $i)"
+                else
+                    echo "----> patched smali: $(basename $i)"
+                fi
+            fi
+
+            $smali assemble -a $api $apkdir/smali -o $apkdir/$dexclass || return 1
+            rm -rf $apkdir/smali
+            if [[ ! -f $apkdir/$dexclass ]]; then
+                echo "----> failed to baksmali: $apkdir/$dexclass"
                 continue
             fi
-        apkfile=$deoappdir/$app/$app.apk
         $sevenzip d "$apkfile" $dexclass >/dev/null
-        pushd $deoappdir/$app
+        pushd $apkdir
         adderror=false
-        $aapt add -fk $app.apk classes.dex || adderror=true
+        $aapt add -fk "$(basename $apkfile)" classes.dex || adderror=true
         popd
         if $adderror; then
             return 1
         fi
-        rm -f $deoappdir/$app/classes.dex
+        rm -f $apkdir/classes.dex
         $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
         mv $apkfile-2 $apkfile
         if [[ "$deoappdir" == "system/data-app" ]]; then
@@ -171,10 +209,10 @@ deodex() {
                 return 1
             fi
         fi
-        if ! [ -d $deoappdir/$app/lib ]; then
-            $sevenzip x -o$deoappdir/$app $apkfile lib >/dev/null
-            if [ -d $deoappdir/$app/lib ]; then
-                pushd $deoappdir/$app/lib
+        if ! [ -d $apkdir/lib ]; then
+            $sevenzip x -o$apkdir $apkfile lib >/dev/null
+            if [ -d $apkdir/lib ]; then
+                pushd $apkdir/lib
                 [ -d armeabi-v7a ] && mv armeabi-v7a arm
                 [ -d arm64-v8a ] && mv arm64-v8a arm64
                 popd
@@ -190,6 +228,7 @@ extract() {
     ver=$2
     file=$3
     apps=$4
+    priv_apps=$5
     dir=miuieu-$model-$ver
     img=$dir-system.img
 
@@ -233,9 +272,16 @@ extract() {
         echo "----> copying $f..."
         $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
     done
+    for f in $priv_apps; do
+        echo "----> copying $f..."
+        $sevenzip x -odeodex/system/ "$img" $f >/dev/null || clean "$work_dir"
+    done
     arch="arm64"
     for f in $apps; do
         deodex "$work_dir" "$f" "$arch" priv-app || clean "$work_dir"
+    done
+    for f in $priv_apps; do
+        deodex "$work_dir" "$(basename $f)" "$arch" "$(dirname $f)" || clean "$work_dir"
     done
 
     file_list="$($sevenzip l "$img" data-app/Weather)"
@@ -294,7 +340,7 @@ for f in *.zip; do
     fi
     model=${arr[2]}
     ver=${arr[3]}
-    extract $model $ver $f "$mipay_apps"
+    extract $model $ver $f "$mipay_apps" "$private_apps"
     hasfile=true
 done
 

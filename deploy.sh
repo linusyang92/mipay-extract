@@ -41,6 +41,6 @@ done
 [[ "$1" == "keep"  ]] || rm -rf miui-*/ miui_*.zip
 for i in "${eu_urls[@]}"
 do
-   NO_EXTRA_FBE=1 bash cleaner-fix.sh "$i" || exit 1
+   bash cleaner-fix.sh --trafficfix --nofbe "$i" || exit 1
 done
 exit 0

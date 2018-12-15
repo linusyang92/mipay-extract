@@ -97,6 +97,11 @@ if [ -d ./system/app ]; then
         app_list="${app_list} /system/app/$(basename $f)"
     done
 fi
+if [ -d ./system/framework ]; then
+    for f in ./system/framework/*; do
+        app_list="${app_list} /system/framework/$(basename $f)"
+    done
+fi
 
 print "Clean files..."
 rm -rf $app_list
@@ -105,6 +110,9 @@ print "Adding files..."
 cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy priv-apps"
 if [ -d ./system/app ]; then
     cp -R ./system/app/* /system/app/ || abort "Failed to copy apps"
+fi
+if [ -d ./system/framework ]; then
+    cp -R ./system/framework/* /system/framework/ || abort "Failed to copy frameworks"
 fi
 
 print "Setting correct permissions..."
