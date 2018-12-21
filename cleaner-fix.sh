@@ -9,7 +9,7 @@ key="$1"
 case $key in
     --trafficfix)
     EXTRA_PRIV="framework/services.jar $EXTRA_PRIV"
-    echo "--> Increase threshold (10M) to prevent high cpu of traffic monitoring"
+    echo "--> Increase threshold (50M) to prevent high cpu of traffic monitoring"
     shift
     ;;
     --nofbe)
@@ -176,8 +176,9 @@ deodex() {
 
             if [[ "$app" == "services.jar" ]]; then
                 i="$apkdir/smali/com/android/server/net/NetworkStatsService.smali"
-                $sed -i 's|, 0x200000$|, 0x1000000|g' "$i" || return 1
-                if grep -q -F ', 0x200000' $i; then
+                $sed -i 's|, 0x200000$|, 0x5000000|g' "$i" || return 1
+                $sed -i 's|, 0x20000$|, 0x1000000|g' "$i" || return 1
+                if grep -q -F ', 0x20000' $i; then
                     echo "----> ! failed to patch: $(basename $i)"
                 else
                     echo "----> patched smali: $(basename $i)"
