@@ -318,7 +318,6 @@ extract() {
 }
 
 trap "echo '--> abort'; exit 1" INT
-declare -a darr=("$@")
 for i in "${darr[@]}"; do
     f="$(basename $i)"
     if [ -f "$f" ] && ! [ -f "$f".aria2 ]; then
