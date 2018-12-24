@@ -29,6 +29,7 @@ const (
 		"AppleWebKit/537.36 (KHTML, like Gecko) " +
 		"Chrome/63.0.3239.132 Safari/537.36"
 	MiuiUpdateUrl  = "https://www.miui.com/download-337.html"
+	GqReleaseUrl   = "https://miui.dedyk.gq"
 	SfReleaseModel = "MIMix2"
 	SfReleaseUrl   = "https://sourceforge.net/projects" +
 		"/xiaomi-eu-multilang-miui-roms/rss?" +
@@ -141,6 +142,40 @@ func getEu(miuiVer string) (version string, url string) {
 	return
 }
 
+func getEuAlt(miuiVer string) (version string, url string) {
+	logger.Log("Fetching xiaomi.eu version (alternative)...")
+	version = "0.0.0"
+	url = ""
+	baseUrl := GqReleaseUrl + "/" + miuiVer + "/"
+	b, err := fetchUrl(baseUrl)
+	if err != nil {
+		logger.Error("Cannot fetch "+GqReleaseUrl, err)
+		return
+	}
+	root, err := html.Parse(bytes.NewReader(b))
+	if err != nil {
+		logger.Error("Failed to parse html", err)
+		return
+	}
+	matcher := func(n *html.Node) bool {
+		if n.DataAtom == atom.A {
+			return strings.Contains(scrape.Attr(n, "href"), SfReleaseModel+"_")
+		}
+		return false
+	}
+	r := scrape.FindAll(root, matcher)
+	if len(r) > 0 {
+		f := scrape.Attr(r[len(r)-1], "href")
+		url = baseUrl + f
+		p := strings.Split(f, "_")
+		if len(p) > 3 {
+			version = p[3]
+		}
+	}
+	logger.Log("EU version: %s", version)
+	return
+}
+
 func getVersion(deploy string) (version string) {
 	version = "0.0.0"
 	scanner := bufio.NewScanner(strings.NewReader(deploy))
@@ -186,6 +221,9 @@ func getNewDeploy(currentVer, currentDeploy string,
 	if gover.Compare(miuiVer, currentVer, ">") || force {
 		version = miuiVer
 		euVer, euUrl = getEu(miuiVer)
+		if len(euUrl) == 0 {
+			euVer, euUrl = getEuAlt(miuiVer)
+		}
 		if euVer == miuiVer || force {
 			deploy = newDeployFile(miuiVer, miuiUrl, euUrl, currentDeploy)
 		}
