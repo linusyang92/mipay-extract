@@ -211,7 +211,7 @@ func newDeployFile(version, miuiUrl, euUrl string, orig string) []byte {
 	return res.Bytes()
 }
 
-func getNewDeploy(currentVer, currentDeploy string,
+func getNewDeploy(currentVer, currentDeploy, euVerSpecify string,
 	force bool) (version string, deploy []byte, err error) {
 	miuiVer, miuiUrl := getMiui()
 	euVer, euUrl := "", ""
@@ -219,24 +219,32 @@ func getNewDeploy(currentVer, currentDeploy string,
 	deploy = []byte(currentDeploy)
 	err = nil
 	if gover.Compare(miuiVer, currentVer, ">") || force {
-		version = miuiVer
-		euVer, euUrl = getEu(miuiVer)
+		if len(euVerSpecify) > 0 {
+			version = euVerSpecify
+			force = true
+		} else {
+			version = miuiVer
+		}
+		euVer, euUrl = getEu(version)
 		if len(euUrl) == 0 {
-			euVer, euUrl = getEuAlt(miuiVer)
+			euVer, euUrl = getEuAlt(version)
+		}
+		if len(euVer) == 0 || euVer == "0.0.0" {
+			force = false
 		}
 		if euVer == miuiVer || force {
-			deploy = newDeployFile(miuiVer, miuiUrl, euUrl, currentDeploy)
+			deploy = newDeployFile(version, miuiUrl, euUrl, currentDeploy)
 		}
 	}
 	if gover.Compare(miuiVer, currentVer, "<=") {
 		err = errors.New(fmt.Sprintf("MIUI China (current: %s)", miuiVer))
-	} else if euVer != miuiVer {
+	} else if euVer != miuiVer && !force {
 		err = errors.New(fmt.Sprintf("xiaomi.eu (current: %s)", euVer))
 	}
 	return
 }
 
-func updateGithub(token string) (retCode int) {
+func updateGithub(token, euVer string) (retCode int) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -265,7 +273,7 @@ func updateGithub(token string) (retCode int) {
 	logger.Log("Github - current version: %s", ver)
 
 	// Get latest rom version
-	version, deploy, err := getNewDeploy(ver, orig, false)
+	version, deploy, err := getNewDeploy(ver, orig, euVer, false)
 	if err != nil {
 		logger.Log("No updates found for %s", err.Error())
 		return 0
@@ -325,13 +333,18 @@ func main() {
 		os.Exit(ret)
 	}()
 	token := ""
+	euVer := ""
 	if len(os.Args) > 1 {
 		token = os.Args[1]
+		if len(os.Args) > 2 {
+			euVer = os.Args[2]
+			logger.Log("Using speicified EU version: %v", euVer)
+		}
 	} else {
-		fmt.Fprintf(os.Stderr, "Usage: %s <Github API token>\n", path.Base(os.Args[0]))
+		fmt.Fprintf(os.Stderr, "Usage: %s <Github API token> [EU version]\n", path.Base(os.Args[0]))
 		ret = 1
 		return
 	}
 	logger.Log("MIUI update checker - Device: %v", SfReleaseModel)
-	ret = updateGithub(token)
+	ret = updateGithub(token, euVer)
 }
