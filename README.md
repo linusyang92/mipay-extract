@@ -16,7 +16,9 @@ Support Windows, Linux and macOS (10.10 or above). Windows version has all depen
 apt-get install -y openjdk-8-jre python2.7
 ```
 
-**Note**: It is recommended to run `extract.bat` on Windows. WSL (Windows Subsystem for Linux) is **not supported** due to issues of the emulated file system in WSL. You need a real Linux VM on Windows to run `./extract.sh`.
+**Note**: 
+- It is recommended to run `extract.bat` on Windows. WSL (Windows Subsystem for Linux) is **not supported** due to issues of the emulated file system in WSL. You need a real Linux VM on Windows to run `./extract.sh`.
+- To avoid line-ending issues, Windows users should **directly** [download the repo](https://github.com/linusyang92/mipay-extract/archive/master.zip) through the Github's "Clone or Download" button, instead of using a Windows version's Git command. If you clone the repo using a MinGW version's Git, the line endings may be incorrectly converted to CR/LF, which makes the generated packages invalid to use.
 
 Automatic builds for selected devices are available in [releases](https://github.com/linusyang92/mipay-extract/releases).
 
