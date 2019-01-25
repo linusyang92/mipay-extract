@@ -3,16 +3,16 @@
 declare -a urls=(
 
 # Rom URLs
-'http://bigota.d.miui.com/9.1.17/miui_MIMIX2_9.1.17_f4eef118e5_8.0.zip'
+'http://bigota.d.miui.com/9.1.24/miui_MIMIX2_9.1.24_4d26c1b6ec_8.0.zip'
 
 )
 
-EU_VER=9.1.17
+EU_VER=9.1.24
 
 declare -a eu_urls=(
 
 # EU Rom URLs
-'https://jaist.dl.sourceforge.net/project/xiaomi-eu-multilang-miui-roms/xiaomi.eu/MIUI-WEEKLY-RELEASES/9.1.17/xiaomi.eu_multi_MIMix2_9.1.17_v10-8.0.zip'
+'https://jaist.dl.sourceforge.net/project/xiaomi-eu-multilang-miui-roms/xiaomi.eu/MIUI-WEEKLY-RELEASES/9.1.24/xiaomi.eu_multi_MIMix2_9.1.24_v10-8.0.zip'
 
 )
 
