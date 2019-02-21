@@ -25,6 +25,9 @@ def main():
     if len(method_list) == 0:
         return 0
     method_set = set(method_list)
+    if not os.path.isfile(smali_path):
+        print("----> Ignore patch: \"%s\" not found" % os.path.basename(smali_path))
+        return 0
 
     with open(smali_path, 'r') as f:
         smali = f.read()
