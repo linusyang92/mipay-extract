@@ -30,6 +30,7 @@ For users in China, you can also download the **xiaomi.eu rom** and run `cleaner
 * Fix FC of cleaner app.
 * Show payment monitor options in setting page of Security app.
 * Use Chinese weather sources in Weather app.
+* Allow alarm of legal workday repeat mode.
 
 ## (Optional) Encryption for xiaomi.eu ROMs
 
