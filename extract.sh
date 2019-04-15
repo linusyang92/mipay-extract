@@ -39,6 +39,8 @@ sed="sed"
 vdex="vdexExtractor"
 cdex="$tool_dir/cdex/compact_dex_converter_linux"
 patchmethod="python2.7 $tool_dir/patchmethod.py"
+imgroot=""
+imgexroot="system/"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
@@ -256,12 +258,12 @@ deodex() {
                 fname=$(basename $f)
                 orig="$(cat $f)"
                 imgpath="${orig#*system/}"
-                imglist="$($sevenzip l "$system_img" "$imgpath")"
+                imglist="$($sevenzip l "$system_img" "${imgroot}$imgpath")"
                 if [[ "$imglist" == *"$imgpath"* ]]; then
                     echo "----> copy native library $fname"
                     output_dir=$deoappdir/$app/lib/$arch/tmp
-                    $sevenzip x -o"$output_dir" "$system_img" "$imgpath" >/dev/null || return 1
-                    mv "$output_dir/$imgpath" $f
+                    $sevenzip x -o"$output_dir" "$system_img" "${imgroot}$imgpath" >/dev/null || return 1
+                    mv "$output_dir/${imgroot}$imgpath" $f
                     rm -Rf $output_dir
                 else
                     echo "ln -s $orig /system/app/$app/lib/$arch/$fname" >> $libln
@@ -327,11 +329,18 @@ extract() {
     rm -Rf deodex
     mkdir -p deodex/system
 
+    detect="$($sevenzip l "$img" system/build.prop)"
+    if [[ "$detect" == *"build.prop"* ]]; then
+        echo "--> detected new image structure"
+        imgroot="system/"
+        imgexroot=""
+    fi
+
     echo "--> copying apps"
-    $sevenzip x -odeodex/system/ "$img" build.prop >/dev/null || clean "$work_dir"
+    $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}build.prop >/dev/null || clean "$work_dir"
     for f in $apps; do
         echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
+        $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}app/$f >/dev/null || clean "$work_dir"
     done
     echo "system/priv-app" > "$work_dir"/$privapp
     echo "$privapp" >> "$work_dir"/$privapp
@@ -339,11 +348,11 @@ extract() {
         echo "----> copying $f..."
         has_priv_apps=true
         echo "system/$f" >> "$work_dir"/$privapp
-        $sevenzip x -odeodex/system/ "$img" $f >/dev/null || clean "$work_dir"
+        $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}$f >/dev/null || clean "$work_dir"
     done
     archs="arm64 x86_64 arm x86"
     arch="arm64"
-    frame="$($sevenzip l "$img" framework)"
+    frame="$($sevenzip l "$img" ${imgroot}framework)"
     for i in $archs; do
         if [[ "$frame" == *"$i"* ]]; then
             arch=$i
@@ -351,7 +360,7 @@ extract() {
             break
         fi
     done
-    $sevenzip x -odeodex/system/ "$img" framework/$arch >/dev/null || clean "$work_dir"
+    $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}framework/$arch >/dev/null || clean "$work_dir"
     rm -f "$work_dir"/{$libmd,$libln}
     touch "$work_dir"/{$libmd,$libln}
     for f in $apps; do
