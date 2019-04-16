@@ -2,6 +2,7 @@
 
 ver=
 tmp=/tmp/cleaner-fix-apps
+imgroot=
 
 if [ "$3" ]; then
     zip=$3
@@ -63,8 +64,15 @@ rmcache() {
 }
 
 rmprop() {
-    if grep -q "^[[:space:]]*$1[[:space:]]*=" "$2"; then
-        sed -i "s/^[[:space:]]*$1[[:space:]]*=/#$1=/" "$2" && \
+    f="$2"
+    if ! [ -f "$f" ]; then
+        f="${imgroot}${f}"
+    fi
+    if ! [ -f "$f" ]; then
+        abort "$(basename "$f") not found."
+    fi
+    if grep -q "^[[:space:]]*$1[[:space:]]*=" "$f"; then
+        sed -i "s/^[[:space:]]*$1[[:space:]]*=/#$1=/" "$f" && \
             print "Comment out property: $1" || \
             print "Failed to modify property: $1"
     fi
@@ -88,18 +96,23 @@ fi
 }
 cd "$tmp"
 
+if [ -d "/system/system/app" ]; then
+    print 'New image structure detected.'
+    imgroot=/system
+fi
+
 app_list=""
 for f in ./system/priv-app/*; do
-    app_list="${app_list} /system/priv-app/$(basename $f)"
+    app_list="${app_list} ${imgroot}/system/priv-app/$(basename $f)"
 done
 if [ -d ./system/app ]; then
     for f in ./system/app/*; do
-        app_list="${app_list} /system/app/$(basename $f)"
+        app_list="${app_list} ${imgroot}/system/app/$(basename $f)"
     done
 fi
 if [ -d ./system/framework ]; then
     for f in ./system/framework/*; do
-        app_list="${app_list} /system/framework/$(basename $f)"
+        app_list="${app_list} ${imgroot}/system/framework/$(basename $f)"
     done
 fi
 
@@ -107,12 +120,12 @@ print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
-cp -R ./system/priv-app/* /system/priv-app/ || abort "Failed to copy priv-apps"
+cp -R ./system/priv-app/* ${imgroot}/system/priv-app/ || abort "Failed to copy priv-apps"
 if [ -d ./system/app ]; then
-    cp -R ./system/app/* /system/app/ || abort "Failed to copy apps"
+    cp -R ./system/app/* ${imgroot}/system/app/ || abort "Failed to copy apps"
 fi
 if [ -d ./system/framework ]; then
-    cp -R ./system/framework/* /system/framework/ || abort "Failed to copy frameworks"
+    cp -R ./system/framework/* ${imgroot}/system/framework/ || abort "Failed to copy frameworks"
 fi
 
 print "Setting correct permissions..."

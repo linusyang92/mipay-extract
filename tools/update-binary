@@ -3,6 +3,7 @@
 ver=
 tmp=/tmp/mipay-apps
 default_prop=/system/build.prop
+imgroot=
 
 if [ "$3" ]; then
     zip=$3
@@ -50,6 +51,12 @@ setperm() {
 }
 
 setprop() {
+    if ! [ -f "$default_prop" ]; then
+        default_prop="${imgroot}${default_prop}"
+    fi
+    if ! [ -f "$default_prop" ]; then
+        abort "build.prop not found."
+    fi
     if grep -q "^[[:space:]]*$1[[:space:]]*=" "$default_prop"; then
         sed -i "s/^[[:space:]]*$1[[:space:]]*=.*$/$1=$2/g" "$default_prop"
     else
@@ -89,16 +96,21 @@ fi
 }
 cd "$tmp"
 
+if [ -d "/system/system/app" ]; then
+    print 'New image structure detected.'
+    imgroot=/system
+fi
+
 app_list=""
 for f in ./system/app/*; do
-    app_list="${app_list} /system/app/$(basename $f)"
+    app_list="${app_list} ${imgroot}/system/app/$(basename $f)"
 done
 
 print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
-cp -R ./system/app/* /system/app/ || abort "Failed copy apps"
+cp -R ./system/app/* ${imgroot}/system/app/ || abort "Failed copy apps"
 #mkdir_symlink
 
 print "Setting correct permissions..."

@@ -13,7 +13,7 @@ case $key in
     shift
     ;;
     --clock)
-    regular_apps="DeskClock $regular_apps"
+    EXTRA_PRIV="app/DeskClock $EXTRA_PRIV"
     echo "--> Modify Clock to support work day alarms"
     shift
     ;;
@@ -45,6 +45,8 @@ sign="java -Xmx${heapsize}m -jar $tool_dir/apksigner.jar sign \
 aria2c_opts="--check-certificate=false --file-allocation=trunc -s10 -x10 -j10 -c"
 aria2c="aria2c $aria2c_opts"
 sed="sed"
+imgroot=""
+imgexroot="system/"
 
 exists() {
   command -v "$1" >/dev/null 2>&1
@@ -243,7 +245,6 @@ extract() {
     file=$3
     apps=$4
     priv_apps=$5
-    regular_apps=$6
     dir=miuieu-$model-$ver
     img=$dir-system.img
 
@@ -277,40 +278,40 @@ extract() {
     rm -Rf deodex
     mkdir -p deodex/system
 
+    detect="$($sevenzip l "$img" system/build.prop)"
+    if [[ "$detect" == *"build.prop"* ]]; then
+        echo "--> detected new image structure"
+        imgroot="system/"
+        imgexroot=""
+    fi
+
     echo "--> copying apps"
-    $sevenzip x -odeodex/system/ "$img" build.prop >/dev/null || clean "$work_dir"
-    file_list="$($sevenzip l "$img" priv-app/Weather)"
+    $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}build.prop >/dev/null || clean "$work_dir"
+    file_list="$($sevenzip l "$img" ${imgroot}priv-app/Weather)"
     if [[ "$file_list" == *Weather* ]]; then
         apps="$apps Weather"
     fi
     for f in $apps; do
         echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" priv-app/$f >/dev/null || clean "$work_dir"
-    done
-    for f in $regular_apps; do
-        echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" app/$f >/dev/null || clean "$work_dir"
+        $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}priv-app/$f >/dev/null || clean "$work_dir"
     done
     for f in $priv_apps; do
         echo "----> copying $f..."
-        $sevenzip x -odeodex/system/ "$img" $f >/dev/null || clean "$work_dir"
+        $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}$f >/dev/null || clean "$work_dir"
     done
     arch="arm64"
     for f in $apps; do
         deodex "$work_dir" "$f" "$arch" priv-app || clean "$work_dir"
     done
-    for f in $regular_apps; do
-        deodex "$work_dir" "$f" "$arch" app || clean "$work_dir"
-    done
     for f in $priv_apps; do
         deodex "$work_dir" "$(basename $f)" "$arch" "$(dirname $f)" || clean "$work_dir"
     done
 
-    file_list="$($sevenzip l "$img" data-app/Weather)"
+    file_list="$($sevenzip l "$img" ${imgroot}data-app/Weather)"
     if [[ "$file_list" == *Weather* ]]; then
     echo "--> patching weather"
     rm -f ../weather-*.apk
-    $sevenzip x -odeodex/system/ "$img" data-app/Weather >/dev/null || clean "$work_dir"
+    $sevenzip x -odeodex/${imgexroot} "$img" ${imgroot}data-app/Weather >/dev/null || clean "$work_dir"
     cp deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver-orig.apk
     deodex "$work_dir" Weather "$arch" data-app || clean "$work_dir"
     mv deodex/system/data-app/Weather/Weather.apk ../weather-$model-$ver-mod.apk
@@ -361,7 +362,7 @@ for f in *.zip; do
     fi
     model=${arr[2]}
     ver=${arr[3]}
-    extract $model $ver $f "$mipay_apps" "$private_apps" "$regular_apps"
+    extract $model $ver $f "$mipay_apps" "$private_apps"
     hasfile=true
 done
 

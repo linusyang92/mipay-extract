@@ -54,6 +54,9 @@ try_del() {
 force_encrypt_oreo() {
     fstab=/system/vendor/etc/fstab.qcom
     if ! [ -f "$fstab" ]; then
+        fstab="/system${fstab}"
+    fi
+    if ! [ -f "$fstab" ]; then
         print "No fstab.qcom in vendor, skipping..."
     else
         sed -i "
