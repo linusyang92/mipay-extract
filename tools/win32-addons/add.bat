@@ -10,4 +10,5 @@ copy brotli.exe ..\win32\bin\
 copy vdexExtractor.exe ..\win32\bin\
 copy sort.exe ..\win32\bin\
 copy tr.exe ..\win32\bin\
+copy python2.7.exe ..\win32\bin\
 popd

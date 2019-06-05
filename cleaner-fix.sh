@@ -112,7 +112,7 @@ update_international_build_flag() {
         found=()
         if [[ "$OSTYPE" == "cygwin"* ]]; then
             pushd "$path"
-            cmdret="$(findstr /sm /c:${pattern} '*.*' | tr -d '\015')"
+            cmdret="$(/cygdrive/c/Windows/System32/findstr.exe /sm /c:${pattern} '*.*' | tr -d '\015')"
             popd
             result="${cmdret//\\//}"
             while read i; do
