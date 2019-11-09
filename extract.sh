@@ -19,7 +19,7 @@ case $key in
 esac
 done
 
-mipay_apps="Mipay NextPay TSMClient UPTsmService"
+mipay_apps="Mipay NextPay TSMClient UPTsmService VirtualSim"
 private_apps=""
 [ -z "$EXTRA" ] || mipay_apps="$mipay_apps $EXTRA"
 [ -z "$EXTRA_PRIV" ] || private_apps="$private_apps $EXTRA_PRIV"
@@ -228,9 +228,47 @@ deodex() {
             $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/AssistHolderController'$1'.smali || return 1
         $sed -i '\|Lcom/miui/home/launcher/assistant/ui/view/AssistHolderView;->initAi()V|d' \
             $deoappdir/$app/smali/com/miui/home/launcher/assistant/ui/view/AssistHolderView.smali || return 1
-        $sed -i 's|sget-boolean \([a-z]\)\([0-9]\+\), Lmiui/os/Build;->IS_GLOBAL_BUILD:Z|const/4 \1\2, 0x0|g' \
+        $sed -i 's|sget-boolean \([a-z][0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1, 0x0|g' \
             $deoappdir/$app/smali/com/miui/personalassistant/provider/PersonalAssistantProvider.smali || return 1
 
+        $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
+        rm -rf $deoappdir/$app/smali
+        if ! [ -f "$deoappdir/$app/$dexclass" ]; then
+            echo "----> failed to patch: $deoappdir/$app/$dexclass"
+            return 1
+        fi
+        $sevenzip d "$apkfile" $dexclass >/dev/null
+        break
+        done <<< "$classes"
+
+        pushd $deoappdir/$app
+        adderror=false
+        $aapt add -fk $app.apk classes*.dex || adderror=true
+        popd
+        if $adderror; then
+            return 1
+        fi
+        rm -f $deoappdir/$app/classes*.dex
+        $zipalign -f 4 $apkfile $apkfile-2 >/dev/null 2>&1
+        mv $apkfile-2 $apkfile
+    elif [[ "$app" == "VirtualSim" ]]; then
+        echo "----> extract native library..."
+        apkfile=$deoappdir/$app/$app.apk
+        path=$deoappdir/$app
+
+        echo "----> decompiling $app..."
+        classes=$($baksmali list dex $apkfile 2>/dev/null | tr -d '\015' | sort -V)
+
+        while read dexclass; do
+        paths="$($baksmali list classes $apkfile/$dexclass 2>/dev/null)"
+        echo "-----> testing $dexclass"
+        [[ "$paths" == *"com/miui/virtualsim/utils"* ]] || continue
+        echo "-----> found $dexclass"
+        $baksmali disassemble --debug-info false --output $deoappdir/$app/smali $apkfile/$dexclass || return 1
+        pushd $deoappdir/$app/smali/com/miui/virtualsim/utils
+        name=$(grep -rl IS_INTERNATIONAL_BUILD)
+        $sed -i 's|sget-boolean \([a-z][0-9]\+\), Lmiui/os/Build;->IS_INTERNATIONAL_BUILD:Z|const/4 \1, 0x0|g' $name || return 1
+        popd
         $smali assemble -a $api $deoappdir/$app/smali -o $deoappdir/$app/$dexclass || return 1
         rm -rf $deoappdir/$app/smali
         if ! [ -f "$deoappdir/$app/$dexclass" ]; then
