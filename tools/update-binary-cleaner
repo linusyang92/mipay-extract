@@ -102,9 +102,11 @@ if [ -d "/system/system/app" ]; then
 fi
 
 app_list=""
-for f in ./system/priv-app/*; do
-    app_list="${app_list} ${imgroot}/system/priv-app/$(basename $f)"
-done
+if [ -d ./system/priv-app ]; then
+    for f in ./system/priv-app/*; do
+        app_list="${app_list} ${imgroot}/system/priv-app/$(basename $f)"
+    done
+fi
 if [ -d ./system/app ]; then
     for f in ./system/app/*; do
         app_list="${app_list} ${imgroot}/system/app/$(basename $f)"
@@ -120,7 +122,9 @@ print "Clean files..."
 rm -rf $app_list
 
 print "Adding files..."
-cp -R ./system/priv-app/* ${imgroot}/system/priv-app/ || abort "Failed to copy priv-apps"
+if [ -d ./system/priv-app ]; then
+    cp -R ./system/priv-app/* ${imgroot}/system/priv-app/ || abort "Failed to copy priv-apps"
+fi
 if [ -d ./system/app ]; then
     cp -R ./system/app/* ${imgroot}/system/app/ || abort "Failed to copy apps"
 fi
