@@ -385,11 +385,6 @@ extract() {
     if $has_priv_apps; then
         cp "$tool_dir/update-binary-cleaner" $ubin
         cat << EOF > "$privapp"
-print "Patching dns and izat.conf..."
-rmprop net.dns1 /system/build.prop
-rmprop net.dns2 /system/build.prop
-rmprop OSNLP_PACKAGE /system/vendor/etc/izat.conf
-rmprop OSNLP_ACTION /system/vendor/etc/izat.conf
 EOF
         $sed -i "s/ver=.*/ver=$model-$ver/" $ubin
         $sed -e '/#extra_patches/ {' -e "r $privapp" -e 'd' -e '}' -i $ubin
