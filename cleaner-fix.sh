@@ -186,7 +186,8 @@ deodex() {
 
             if [[ "$app" == "DeskClock" ]]; then
                 echo "----> searching smali..."
-                update_international_build_flag "$apkdir/smali/"
+                update_international_build_flag "$apkdir/smali/com/android/deskclock/settings/SettingsActivity.smali"
+                update_international_build_flag "$apkdir/smali/com/android/deskclock/util/Util.smali"
             fi
 
             if [[ "$app" == "services.jar" ]]; then
